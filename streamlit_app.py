@@ -12,7 +12,11 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from core.db_utils import get_db, build_entry_payload_from_streamlit
+from core.db_utils import (
+    build_entry_payload_from_streamlit,
+    get_db,
+    is_cloud_runtime,
+)
 from core.excel_utils import (
     get_acabados_for_cliente,
     get_process_choices_for_acabado_e_ferramental,
@@ -198,6 +202,13 @@ def render_header():
     st.markdown(f'''<div class="app-hero">{logo_img}<div class="hero-text"><h1>Controle Produção</h1><p>MTECH</p></div></div>''', unsafe_allow_html=True)
 
 render_header()
+
+db_status = get_db()
+if is_cloud_runtime() and not db_status.is_persistent:
+    st.warning(
+        "Persistencia externa nao configurada. Configure DATABASE_URL nos Secrets "
+        "do Streamlit Cloud antes de usar em producao."
+    )
 
 if "last_ferramental" not in st.session_state:
     st.session_state.last_ferramental = None

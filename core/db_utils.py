@@ -1,45 +1,122 @@
 """
-Database utilities - Implementação sem Django usando SQLite puro
-Compatível com Streamlit Cloud
+Database utilities - SQLite local e PostgreSQL persistente em producao.
 """
 
-import sqlite3
 import hashlib
+import os
+import sqlite3
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from contextlib import contextmanager
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:  # pragma: no cover - usado apenas quando PostgreSQL nao esta instalado
+    psycopg = None
+    dict_row = None
+
+
+ENV_DATABASE_KEYS = (
+    "DATABASE_URL",
+    "POSTGRES_URL",
+    "POSTGRESQL_URL",
+    "SUPABASE_DB_URL",
+)
+
+
+def _get_secret_value(key: str) -> Optional[str]:
+    try:
+        import streamlit as st
+
+        value = st.secrets.get(key)
+    except Exception:
+        return None
+
+    return str(value).strip() if value else None
+
+
+def get_database_url() -> Optional[str]:
+    """Busca URL persistente em variaveis de ambiente ou Streamlit Secrets."""
+    for key in ENV_DATABASE_KEYS:
+        value = os.getenv(key) or _get_secret_value(key)
+        if value:
+            return value
+    return None
+
+
+def _is_streamlit_cloud() -> bool:
+    return Path("/app").exists() or bool(os.getenv("STREAMLIT_SHARING_MODE"))
+
+
+def is_cloud_runtime() -> bool:
+    """Indica se o app aparenta estar rodando no Streamlit Cloud."""
+    return _is_streamlit_cloud()
+
+
+def _normalize_postgres_url(database_url: str) -> str:
+    if database_url.startswith("postgres://"):
+        return "postgresql://" + database_url[len("postgres://"):]
+    return database_url
 
 
 class ProductionDB:
-    """Gerenciador de banco SQLite sem dependência de Django"""
+    """Gerenciador de banco com PostgreSQL persistente ou SQLite local."""
 
-    def __init__(self, db_path: Optional[str] = None):
-        if db_path is None:
-            # Detecta se está em Streamlit Cloud ou local
-            if Path("/app").exists():
-                # Streamlit Cloud - usar /tmp (volátil)
-                db_path = "/tmp/production.db"
-            else:
-                # Local - usar home directory
+    def __init__(
+        self,
+        db_path: Optional[str] = None,
+        database_url: Optional[str] = None,
+    ):
+        self.database_url = database_url or get_database_url()
+        self.backend = "postgres" if self.database_url else "sqlite"
+        self.db_path: Optional[Path] = None
+
+        if self.backend == "postgres":
+            if psycopg is None:
+                raise RuntimeError(
+                    "DATABASE_URL configurada, mas a dependencia psycopg nao esta instalada."
+                )
+            self.database_url = _normalize_postgres_url(self.database_url)
+        else:
+            if db_path is None:
                 db_path = str(Path.home() / ".mtech" / "production.db")
+            self.db_path = Path(db_path)
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
-        self.db_path = Path(db_path)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
+
+    @property
+    def is_persistent(self) -> bool:
+        return self.backend == "postgres"
+
+    @property
+    def placeholder(self) -> str:
+        return "%s" if self.backend == "postgres" else "?"
 
     @contextmanager
     def get_conn(self):
-        """Context manager para conexões seguras"""
-        conn = sqlite3.connect(str(self.db_path))
-        conn.row_factory = sqlite3.Row
+        """Context manager para conexoes seguras."""
+        if self.backend == "postgres":
+            conn = psycopg.connect(self.database_url, row_factory=dict_row)
+        else:
+            conn = sqlite3.connect(str(self.db_path))
+            conn.row_factory = sqlite3.Row
+
         try:
             yield conn
         finally:
             conn.close()
 
     def _init_schema(self):
-        """Cria tabelas se não existirem"""
+        """Cria tabelas se nao existirem."""
+        if self.backend == "postgres":
+            self._init_postgres_schema()
+        else:
+            self._init_sqlite_schema()
+
+    def _init_sqlite_schema(self):
         with self.get_conn() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS production_entries (
@@ -65,149 +142,222 @@ class ProductionDB:
                 )
             """)
             conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_timestamp 
+                CREATE INDEX IF NOT EXISTS idx_timestamp
                 ON production_entries(timestamp DESC)
             """)
             conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_source_hash 
+                CREATE INDEX IF NOT EXISTS idx_source_hash
                 ON production_entries(source_hash)
             """)
             conn.commit()
 
-    def save_entry(self, data: Dict[str, Any]) -> int:
-        """Salva novo registro de produção"""
+    def _init_postgres_schema(self):
         with self.get_conn() as conn:
-            cursor = conn.execute("""
-                INSERT INTO production_entries (
-                    schema_version, timestamp, cliente, display, numero_display,
-                    maquinario, processo, data_producao, operadores, numero_operadores,
-                    hora_inicio, hora_fim, quantidade, pecas_mortas,
-                    quantidade_total, source_hash, import_key
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                data.get('schema_version'),
-                data.get('timestamp'),
-                data.get('cliente'),
-                data.get('display'),
-                data.get('numero_display'),
-                data.get('maquinario'),
-                data.get('processo'),
-                data.get('data_producao'),
-                data.get('operadores'),
-                data.get('numero_operadores'),
-                data.get('hora_inicio'),
-                data.get('hora_fim'),
-                data.get('quantidade', 0),
-                data.get('pecas_mortas', 0),
-                data.get('quantidade_total', 0),
-                data.get('source_hash'),
-                data.get('import_key'),
-            ))
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS production_entries (
+                        id BIGSERIAL PRIMARY KEY,
+                        import_key TEXT UNIQUE,
+                        source_hash TEXT UNIQUE,
+                        schema_version TEXT,
+                        timestamp TIMESTAMPTZ,
+                        cliente TEXT,
+                        display TEXT,
+                        numero_display TEXT,
+                        maquinario TEXT,
+                        processo TEXT,
+                        data_producao TEXT,
+                        operadores TEXT,
+                        numero_operadores INTEGER,
+                        hora_inicio TEXT,
+                        hora_fim TEXT,
+                        quantidade INTEGER DEFAULT 0,
+                        pecas_mortas INTEGER DEFAULT 0,
+                        quantidade_total INTEGER DEFAULT 0,
+                        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_timestamp
+                    ON production_entries(timestamp DESC)
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_source_hash
+                    ON production_entries(source_hash)
+                """)
+            conn.commit()
+
+    def _entry_values(self, data: Dict[str, Any]) -> tuple:
+        return (
+            data.get("schema_version"),
+            data.get("timestamp"),
+            data.get("cliente"),
+            data.get("display"),
+            data.get("numero_display"),
+            data.get("maquinario"),
+            data.get("processo"),
+            data.get("data_producao"),
+            data.get("operadores"),
+            data.get("numero_operadores"),
+            data.get("hora_inicio"),
+            data.get("hora_fim"),
+            data.get("quantidade", 0),
+            data.get("pecas_mortas", 0),
+            data.get("quantidade_total", 0),
+            data.get("source_hash"),
+            data.get("import_key"),
+        )
+
+    def save_entry(self, data: Dict[str, Any]) -> int:
+        """Salva novo registro de producao."""
+        columns = """
+            schema_version, timestamp, cliente, display, numero_display,
+            maquinario, processo, data_producao, operadores, numero_operadores,
+            hora_inicio, hora_fim, quantidade, pecas_mortas,
+            quantidade_total, source_hash, import_key
+        """
+        placeholders = ", ".join([self.placeholder] * 17)
+
+        with self.get_conn() as conn:
+            if self.backend == "postgres":
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        f"""
+                        INSERT INTO production_entries ({columns})
+                        VALUES ({placeholders})
+                        RETURNING id
+                        """,
+                        self._entry_values(data),
+                    )
+                    entry_id = cursor.fetchone()["id"]
+                conn.commit()
+                return entry_id
+
+            cursor = conn.execute(
+                f"""
+                INSERT INTO production_entries ({columns})
+                VALUES ({placeholders})
+                """,
+                self._entry_values(data),
+            )
             conn.commit()
             return cursor.lastrowid
 
     def get_all_entries(self) -> List[Dict]:
-        """Retorna todos os registros ordenados por timestamp"""
+        """Retorna todos os registros ordenados por timestamp."""
         with self.get_conn() as conn:
             cursor = conn.execute("""
-                SELECT * FROM production_entries 
+                SELECT * FROM production_entries
                 ORDER BY timestamp DESC, id DESC
             """)
             return [dict(row) for row in cursor.fetchall()]
 
     def get_entries_paginated(self, limit: int = 50, offset: int = 0) -> Tuple[List[Dict], int]:
-        """Retorna registros com paginação"""
+        """Retorna registros com paginacao."""
         with self.get_conn() as conn:
-            # Total
             cursor = conn.execute("SELECT COUNT(*) as count FROM production_entries")
-            total = cursor.fetchone()['count']
+            total = dict(cursor.fetchone())["count"]
 
-            # Dados
-            cursor = conn.execute("""
-                SELECT * FROM production_entries 
+            cursor = conn.execute(
+                f"""
+                SELECT * FROM production_entries
                 ORDER BY timestamp DESC, id DESC
-                LIMIT ? OFFSET ?
-            """, (limit, offset))
+                LIMIT {self.placeholder} OFFSET {self.placeholder}
+                """,
+                (limit, offset),
+            )
             rows = [dict(row) for row in cursor.fetchall()]
 
         return rows, total
 
     def get_entry_by_id(self, entry_id: int) -> Optional[Dict]:
-        """Retorna um registro específico"""
+        """Retorna um registro especifico."""
         with self.get_conn() as conn:
             cursor = conn.execute(
-                "SELECT * FROM production_entries WHERE id = ?",
-                (entry_id,)
+                f"SELECT * FROM production_entries WHERE id = {self.placeholder}",
+                (entry_id,),
             )
             row = cursor.fetchone()
             return dict(row) if row else None
 
     def update_entry(self, entry_id: int, data: Dict[str, Any]) -> bool:
-        """Atualiza um registro existente"""
+        """Atualiza um registro existente."""
+        ph = self.placeholder
         with self.get_conn() as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                f"""
                 UPDATE production_entries SET
-                    cliente = ?, display = ?, numero_display = ?,
-                    maquinario = ?, processo = ?, data_producao = ?,
-                    operadores = ?, numero_operadores = ?,
-                    hora_inicio = ?, hora_fim = ?,
-                    quantidade = ?, pecas_mortas = ?, quantidade_total = ?,
-                    source_hash = ?
-                WHERE id = ?
-            """, (
-                data.get('cliente'),
-                data.get('display'),
-                data.get('numero_display'),
-                data.get('maquinario'),
-                data.get('processo'),
-                data.get('data_producao'),
-                data.get('operadores'),
-                data.get('numero_operadores'),
-                data.get('hora_inicio'),
-                data.get('hora_fim'),
-                data.get('quantidade'),
-                data.get('pecas_mortas'),
-                data.get('quantidade_total'),
-                data.get('source_hash'),
-                entry_id
-            ))
+                    cliente = {ph}, display = {ph}, numero_display = {ph},
+                    maquinario = {ph}, processo = {ph}, data_producao = {ph},
+                    operadores = {ph}, numero_operadores = {ph},
+                    hora_inicio = {ph}, hora_fim = {ph},
+                    quantidade = {ph}, pecas_mortas = {ph}, quantidade_total = {ph},
+                    source_hash = {ph}
+                WHERE id = {ph}
+                """,
+                (
+                    data.get("cliente"),
+                    data.get("display"),
+                    data.get("numero_display"),
+                    data.get("maquinario"),
+                    data.get("processo"),
+                    data.get("data_producao"),
+                    data.get("operadores"),
+                    data.get("numero_operadores"),
+                    data.get("hora_inicio"),
+                    data.get("hora_fim"),
+                    data.get("quantidade"),
+                    data.get("pecas_mortas"),
+                    data.get("quantidade_total"),
+                    data.get("source_hash"),
+                    entry_id,
+                ),
+            )
             conn.commit()
             return cursor.rowcount > 0
 
     def delete_entry(self, entry_id: int) -> bool:
-        """Deleta um registro"""
+        """Deleta um registro."""
         with self.get_conn() as conn:
             cursor = conn.execute(
-                "DELETE FROM production_entries WHERE id = ?",
-                (entry_id,)
+                f"DELETE FROM production_entries WHERE id = {self.placeholder}",
+                (entry_id,),
             )
             conn.commit()
             return cursor.rowcount > 0
 
     def search_entries(self, query: str) -> List[Dict]:
-        """Busca registros por cliente, display ou processo"""
+        """Busca registros por cliente, display ou processo."""
+        search_pattern = f"%{query}%"
         with self.get_conn() as conn:
-            search_pattern = f"%{query}%"
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                f"""
                 SELECT * FROM production_entries
-                WHERE cliente LIKE ? OR display LIKE ? OR processo LIKE ?
+                WHERE cliente LIKE {self.placeholder}
+                   OR display LIKE {self.placeholder}
+                   OR processo LIKE {self.placeholder}
                 ORDER BY timestamp DESC
-            """, (search_pattern, search_pattern, search_pattern))
+                """,
+                (search_pattern, search_pattern, search_pattern),
+            )
             return [dict(row) for row in cursor.fetchall()]
 
     def get_entries_by_date_range(self, start_date: str, end_date: str) -> List[Dict]:
-        """Retorna registros em intervalo de datas"""
+        """Retorna registros em intervalo de datas."""
         with self.get_conn() as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                f"""
                 SELECT * FROM production_entries
-                WHERE data_producao BETWEEN ? AND ?
+                WHERE data_producao BETWEEN {self.placeholder} AND {self.placeholder}
                 ORDER BY timestamp DESC
-            """, (start_date, end_date))
+                """,
+                (start_date, end_date),
+            )
             return [dict(row) for row in cursor.fetchall()]
 
 
 def _normalize_text(value) -> str:
-    """Normaliza texto"""
+    """Normaliza texto."""
     if value is None:
         return ""
     if isinstance(value, str):
@@ -215,8 +365,15 @@ def _normalize_text(value) -> str:
     return str(value).strip()
 
 
+def _normalize_operadores(value) -> str:
+    """Normaliza lista de operadores para texto legivel."""
+    if isinstance(value, (list, tuple, set)):
+        return "; ".join(_normalize_text(item) for item in value if _normalize_text(item))
+    return _normalize_text(value)
+
+
 def _normalize_int(value):
-    """Normaliza número"""
+    """Normaliza numero."""
     text = _normalize_text(value)
     if not text:
         return None
@@ -227,7 +384,7 @@ def _normalize_int(value):
 
 
 def _build_source_hash(payload: dict) -> str:
-    """Cria hash único para evitar duplicatas"""
+    """Cria hash unico para evitar duplicatas."""
     ordered_keys = [
         "schema_version",
         "timestamp",
@@ -257,9 +414,9 @@ def _build_source_hash(payload: dict) -> str:
 
 
 def build_entry_payload_from_streamlit(payload: dict, schema_version: str) -> dict:
-    """Constrói payload normalizado a partir de dados do Streamlit"""
+    """Constroi payload normalizado a partir de dados do Streamlit."""
     timestamp = datetime.now()
-    
+
     entry_payload = {
         "schema_version": schema_version,
         "timestamp": timestamp.isoformat(),
@@ -269,7 +426,7 @@ def build_entry_payload_from_streamlit(payload: dict, schema_version: str) -> di
         "maquinario": _normalize_text(payload.get("ferramental")),
         "processo": _normalize_text(payload.get("processo")),
         "data_producao": _normalize_text(payload.get("data_producao")),
-        "operadores": _normalize_text(payload.get("operadores")),
+        "operadores": _normalize_operadores(payload.get("operadores")),
         "numero_operadores": _normalize_int(payload.get("numero_operadores")) or 0,
         "hora_inicio": _normalize_text(payload.get("hora_iniciada")),
         "hora_fim": _normalize_text(payload.get("hora_finalizada")),
@@ -281,13 +438,18 @@ def build_entry_payload_from_streamlit(payload: dict, schema_version: str) -> di
     return entry_payload
 
 
-# Singleton global para reutilizar conexão
 _db_instance = None
 
 
 def get_db() -> ProductionDB:
-    """Retorna instância global do banco de dados"""
+    """Retorna instancia global do banco de dados."""
     global _db_instance
     if _db_instance is None:
         _db_instance = ProductionDB()
     return _db_instance
+
+
+def reset_db_instance() -> None:
+    """Limpa singleton para testes ou troca de configuracao."""
+    global _db_instance
+    _db_instance = None

@@ -1,13 +1,13 @@
 # FORMS-MTECH - Controle de Produção
 
 **Status:** ✅ Refatorado para Streamlit Cloud  
-**URL:** https://mtechforms-refactored.streamlit.app/ (será criada após deploy)  
+**URL:** https://formsmtech.streamlit.app/  
 **Versão:** 1.2  
 
 ## O que mudou?
 
 - ✅ **Removido Django completamente** - Não é necessário para Streamlit
-- ✅ **Implementado SQLite puro** - Sem dependências de ORM
+- ✅ **Persistência configurável** - PostgreSQL em produção e SQLite local
 - ✅ **Compatível com Streamlit Cloud** - Deploy direto do GitHub
 - ✅ **Mesma funcionalidade** - Todos os recursos mantidos
 
@@ -53,7 +53,7 @@ PROJETOS---BACKEND-IA/
 ### 📝 Lançamento de Registros
 - Seleção de cliente, display, máquina, processo
 - Validação automática
-- Salva em banco SQLite local
+- Salva em banco persistente quando `DATABASE_URL` estiver configurada
 
 ### 📊 Consulta
 - Visualizar todos os registros
@@ -76,17 +76,23 @@ PROJETOS---BACKEND-IA/
 ## Dados & Persistência
 
 **Local:** Dados salvos em `~/.mtech/production.db`  
-**Streamlit Cloud:** Dados em `/tmp/production.db` (voláteis entre deploys)  
+**Produção/Streamlit Cloud:** Configure `DATABASE_URL` nos Secrets para usar PostgreSQL persistente.  
 
-Para persistência em produção, use PostgreSQL externo (Supabase, Neon).
+Exemplo de Secret no Streamlit Cloud:
+
+```toml
+DATABASE_URL = "postgresql://usuario:senha@host:5432/banco?sslmode=require"
+```
+
+Pode ser uma URL de PostgreSQL do Supabase, Neon ou outro provedor compatível.
 
 ## Diferenças vs Versão Anterior
 
-| Aspecto | Antes (Django) | Depois (SQLite) |
+| Aspecto | Antes (Django) | Depois (Streamlit) |
 |--------|---|---|
-| Framework BD | Django ORM | SQLite puro |
+| Framework BD | Django ORM | PostgreSQL/SQLite via SQL direto |
 | Deploy | VPS necessário | Streamlit Cloud |
-| Dependências | Django, migrations | Apenas pandas, streamlit |
+| Dependências | Django, migrations | Streamlit, pandas, openpyxl, psycopg |
 | Admin | Django admin | UI Streamlit |
 | Arquitetura | Complexa | Simples |
 
@@ -96,7 +102,7 @@ Para persistência em produção, use PostgreSQL externo (Supabase, Neon).
 R: Migre do `db.sqlite3` original para o novo com SQL direto.
 
 **P: Pode usar com PostgreSQL?**  
-R: Sim! Edite `core/db_utils.py` para usar `psycopg2`.
+R: Sim. Configure `DATABASE_URL` nos Secrets do Streamlit Cloud.
 
 **P: Como adicionar novas funcionalidades?**  
 R: Edite `streamlit_app.py`, faça commit, push - deploy automático!
@@ -110,7 +116,7 @@ Problemas? Verifique:
 
 ## Roadmap
 
-- [ ] Integração com PostgreSQL
+- [x] Integração com PostgreSQL
 - [ ] Autenticação de usuários
 - [ ] Gráficos e relatórios
 - [ ] API REST
