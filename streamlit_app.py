@@ -317,7 +317,7 @@ def render_consulta_screen():
         return
     
     df = pd.DataFrame(entries)
-    st.dataframe(df, hide_index=True, use_container_width=True)
+    st.dataframe(df, hide_index=True, width="stretch")
     
     csv = df.to_csv(index=False).encode('utf-8-sig')
     st.download_button("Exportar CSV", data=csv, file_name="registros.csv", mime="text/csv")
