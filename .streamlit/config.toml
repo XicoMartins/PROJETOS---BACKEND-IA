@@ -1,0 +1,17 @@
+[theme]
+primaryColor = "#0a7b8c"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#0c1b1f"
+font = "sans serif"
+
+[client]
+maxMessageSize = 200
+
+[server]
+headless = true
+port = 8501
+runOnSave = true
+
+[logger]
+level = "info"
