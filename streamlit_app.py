@@ -203,12 +203,26 @@ def render_header():
 
 render_header()
 
-db_status = get_db()
-if is_cloud_runtime() and not db_status.is_persistent:
-    st.warning(
-        "Persistencia externa nao configurada. Configure DATABASE_URL nos Secrets "
-        "do Streamlit Cloud antes de usar em producao."
+try:
+    db_status = get_db()
+except Exception as exc:
+    st.error(
+        "Nao foi possivel conectar ao banco de dados persistente. "
+        "Confira a DATABASE_URL nos Secrets do Streamlit Cloud e verifique se "
+        "usuario, senha, host, porta, nome do banco e SSL estao corretos."
     )
+    st.info(
+        "Para Supabase, prefira a connection string do Transaction Pooler "
+        "com `sslmode=require`. Para Neon, use a URL PostgreSQL com SSL."
+    )
+    st.caption(f"Detalhe tecnico: {type(exc).__name__}: {exc}")
+    st.stop()
+else:
+    if is_cloud_runtime() and not db_status.is_persistent:
+        st.warning(
+            "Persistencia externa nao configurada. Configure DATABASE_URL nos Secrets "
+            "do Streamlit Cloud antes de usar em producao."
+        )
 
 if "last_ferramental" not in st.session_state:
     st.session_state.last_ferramental = None

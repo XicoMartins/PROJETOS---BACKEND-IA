@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 try:
     import psycopg
@@ -57,8 +58,12 @@ def is_cloud_runtime() -> bool:
 
 def _normalize_postgres_url(database_url: str) -> str:
     if database_url.startswith("postgres://"):
-        return "postgresql://" + database_url[len("postgres://"):]
-    return database_url
+        database_url = "postgresql://" + database_url[len("postgres://"):]
+
+    parts = urlsplit(database_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query.setdefault("sslmode", "require")
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 class ProductionDB:
