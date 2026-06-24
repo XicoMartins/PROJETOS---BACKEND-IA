@@ -44,6 +44,8 @@ SCHEMA_VERSION = "1.2"
 PROCESSO_OUTRO = "__PROCESSO_OUTRO__"
 SAVE_SUCCESS_MESSAGE_KEY = "save_success_message"
 RESET_FORM_REQUESTED_KEY = "reset_form_requested"
+FORM_VERSION_KEY = "form_version"
+FORM_FIELD_PREFIX = "form_field__"
 BG_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "background.png"
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
@@ -232,15 +234,25 @@ if "last_cliente" not in st.session_state:
     st.session_state.last_cliente = None
 if "operadores_selecionados" not in st.session_state:
     st.session_state.operadores_selecionados = []
+if FORM_VERSION_KEY not in st.session_state:
+    st.session_state[FORM_VERSION_KEY] = 0
 
 def reset_form_fields():
-    for k in ["cliente", "acabado", "ferramental", "processo", "processo_custom", "numero_display",
+    legacy_keys = ["cliente", "acabado", "ferramental", "processo", "processo_custom", "numero_display",
               "data_producao", "hora_iniciada", "hora_finalizada", "quantidade_produzida",
-              "pecas_mortas", "quantidade_total", "numero_operadores", "operadores_multiselect"]:
+              "pecas_mortas", "quantidade_total", "numero_operadores", "operadores_multiselect"]
+    for k in legacy_keys:
         st.session_state.pop(k, None)
+    for k in list(st.session_state.keys()):
+        if isinstance(k, str) and k.startswith(FORM_FIELD_PREFIX):
+            st.session_state.pop(k, None)
+    st.session_state[FORM_VERSION_KEY] += 1
     st.session_state.last_cliente = None
     st.session_state.last_ferramental = None
     st.session_state.operadores_selecionados = []
+
+def form_key(name: str) -> str:
+    return f"{FORM_FIELD_PREFIX}{st.session_state[FORM_VERSION_KEY]}__{name}"
 
 def render_lancamento_screen():
     if st.session_state.pop(RESET_FORM_REQUESTED_KEY, False):
@@ -250,46 +262,66 @@ def render_lancamento_screen():
     st.markdown('<div class="section-title">Lançamento</div>', unsafe_allow_html=True)
 
     success_message = st.session_state.pop(SAVE_SUCCESS_MESSAGE_KEY, None)
-    if success_message:
-        st.success(success_message)
 
-    cliente = st.selectbox("Cliente", choices["clientes"], index=None, key="cliente")
+    cliente_key = form_key("cliente")
+    acabado_key = form_key("acabado")
+    numero_display_key = form_key("numero_display")
+    ferramental_key = form_key("ferramental")
+    processo_key = form_key("processo")
+    processo_custom_key = form_key("processo_custom")
+    data_producao_key = form_key("data_producao")
+    hora_iniciada_key = form_key("hora_iniciada")
+    hora_finalizada_key = form_key("hora_finalizada")
+    quantidade_produzida_key = form_key("quantidade_produzida")
+    pecas_mortas_key = form_key("pecas_mortas")
+    quantidade_total_key = form_key("quantidade_total")
+    numero_operadores_key = form_key("numero_operadores")
+    operadores_multiselect_key = form_key("operadores_multiselect")
+
+    cliente = st.selectbox("Cliente", choices["clientes"], index=None, key=cliente_key)
     if st.session_state.last_cliente != cliente:
-        st.session_state.pop("acabado", None)
+        st.session_state.pop(acabado_key, None)
     st.session_state.last_cliente = cliente
     
     acabado_options = get_acabados_for_cliente(cliente) if cliente else choices["acabados"]
-    acabado = st.selectbox("Display", acabado_options, index=None, key="acabado")
-    numero_display = st.text_input("Codigo (8 digitos)", key="numero_display", max_chars=8)
-    ferramental = st.selectbox("Ferramental", choices["ferramentais"], index=None, key="ferramental")
+    acabado = st.selectbox("Display", acabado_options, index=None, key=acabado_key)
+    numero_display = st.text_input("Codigo (8 digitos)", key=numero_display_key, max_chars=8)
+    ferramental = st.selectbox("Ferramental", choices["ferramentais"], index=None, key=ferramental_key)
     
     if st.session_state.last_ferramental != ferramental:
-        st.session_state.pop("processo", None)
+        st.session_state.pop(processo_key, None)
     st.session_state.last_ferramental = ferramental
     
     processo_options = get_process_choices_for_acabado_e_ferramental(acabado, ferramental)
     processo_options_with_outro = processo_options + [PROCESSO_OUTRO]
-    processo = st.selectbox("Processo", processo_options_with_outro, index=None, key="processo",
+    processo = st.selectbox("Processo", processo_options_with_outro, index=None, key=processo_key,
                            format_func=lambda x: "Outro (digitar)" if x == PROCESSO_OUTRO else x)
     
-    processo_custom = st.text_input("Nome do processo (novo)", key="processo_custom") if processo == PROCESSO_OUTRO else ""
+    processo_custom = st.text_input("Nome do processo (novo)", key=processo_custom_key) if processo == PROCESSO_OUTRO else ""
     processo_selecionado = processo_custom.strip() if processo == PROCESSO_OUTRO else processo
     
-    data_producao = st.date_input("Data", value=date.today(), format="DD/MM/YYYY", key="data_producao")
-    hora_iniciada = st.time_input("Hora início", value=time(0,0), key="hora_iniciada")
-    hora_finalizada = st.time_input("Hora fim", value=time(0,0), key="hora_finalizada")
-    quantidade_produzida = st.number_input("Quantidade", min_value=0, step=1, key="quantidade_produzida")
-    pecas_mortas = st.number_input("Peças mortas", min_value=0, step=1, key="pecas_mortas")
-    quantidade_total = st.number_input("Quantidade total", min_value=0, step=1, key="quantidade_total")
-    numero_operadores = st.number_input("Num. operadores", min_value=1, step=1, key="numero_operadores")
+    data_producao = st.date_input("Data", value=date.today(), format="DD/MM/YYYY", key=data_producao_key)
+    hora_iniciada = st.time_input("Hora início", value=time(0,0), key=hora_iniciada_key)
+    hora_finalizada = st.time_input("Hora fim", value=time(0,0), key=hora_finalizada_key)
+    quantidade_produzida = st.number_input("Quantidade", min_value=0, step=1, key=quantidade_produzida_key)
+    pecas_mortas = st.number_input("Peças mortas", min_value=0, step=1, key=pecas_mortas_key)
+    quantidade_total = st.number_input("Quantidade total", min_value=0, step=1, key=quantidade_total_key)
+    numero_operadores = st.number_input("Num. operadores", min_value=1, step=1, key=numero_operadores_key)
     
     operadores_base = unique_preserve_order([o for o in operadores if o])
     operadores_selecionados = st.multiselect(f"Operadores ({len(st.session_state.operadores_selecionados)}/{numero_operadores})",
-                                             operadores_base, key="operadores_multiselect",
+                                             operadores_base, key=operadores_multiselect_key,
                                              max_selections=numero_operadores)
     st.session_state.operadores_selecionados = operadores_selecionados
     
-    if st.button("Salvar"):
+    save_col, success_col = st.columns([1, 8])
+    with save_col:
+        salvar = st.button("Salvar")
+    with success_col:
+        if success_message:
+            st.success(success_message)
+
+    if salvar:
         erros = validate_inputs(cliente, acabado, numero_display, ferramental, processo_selecionado,
                                data_producao, hora_iniciada, hora_finalizada, quantidade_produzida,
                                quantidade_total, numero_operadores, operadores_selecionados)
