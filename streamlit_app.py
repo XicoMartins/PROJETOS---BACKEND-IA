@@ -42,6 +42,8 @@ choices = load_base_choices()
 operadores = get_operadores()
 SCHEMA_VERSION = "1.2"
 PROCESSO_OUTRO = "__PROCESSO_OUTRO__"
+SAVE_SUCCESS_MESSAGE_KEY = "save_success_message"
+RESET_FORM_REQUESTED_KEY = "reset_form_requested"
 BG_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "background.png"
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
@@ -232,15 +234,25 @@ if "operadores_selecionados" not in st.session_state:
     st.session_state.operadores_selecionados = []
 
 def reset_form_fields():
-    for k in ["cliente", "acabado", "ferramental", "processo", "numero_display",
+    for k in ["cliente", "acabado", "ferramental", "processo", "processo_custom", "numero_display",
               "data_producao", "hora_iniciada", "hora_finalizada", "quantidade_produzida",
-              "pecas_mortas", "quantidade_total", "numero_operadores"]:
+              "pecas_mortas", "quantidade_total", "numero_operadores", "operadores_multiselect"]:
         st.session_state.pop(k, None)
+    st.session_state.last_cliente = None
+    st.session_state.last_ferramental = None
+    st.session_state.operadores_selecionados = []
 
 def render_lancamento_screen():
+    if st.session_state.pop(RESET_FORM_REQUESTED_KEY, False):
+        reset_form_fields()
+
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Lançamento</div>', unsafe_allow_html=True)
-    
+
+    success_message = st.session_state.pop(SAVE_SUCCESS_MESSAGE_KEY, None)
+    if success_message:
+        st.success(success_message)
+
     cliente = st.selectbox("Cliente", choices["clientes"], index=None, key="cliente")
     if st.session_state.last_cliente != cliente:
         st.session_state.pop("acabado", None)
@@ -296,8 +308,8 @@ def render_lancamento_screen():
             }
             entry_id, error = salvar_registro(registro)
             if entry_id:
-                st.success(f"✅ Salvo! ID #{entry_id}")
-                reset_form_fields()
+                st.session_state[SAVE_SUCCESS_MESSAGE_KEY] = f"Salvo com sucesso! ID #{entry_id}"
+                st.session_state[RESET_FORM_REQUESTED_KEY] = True
                 st.rerun()
             else:
                 st.error(error or "Erro ao salvar.")
