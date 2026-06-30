@@ -442,8 +442,6 @@ def render_ajustes_screen():
     st.markdown('<div class="section-title">Ajustar lancamento anterior</div>', unsafe_allow_html=True)
 
     success_message = st.session_state.pop(ADJUST_SUCCESS_MESSAGE_KEY, None)
-    if success_message:
-        st.success(success_message)
 
     db = get_db()
     entries = db.get_all_entries()
@@ -621,7 +619,14 @@ def render_ajustes_screen():
         key=operadores_multiselect_key,
     )
 
-    if st.button("Salvar ajuste", key=f"{key_base}__save"):
+    save_col, success_col = st.columns([1, 8])
+    with save_col:
+        salvar_ajuste = st.button("Salvar ajuste", key=f"{key_base}__save")
+    with success_col:
+        if success_message:
+            st.success(success_message)
+
+    if salvar_ajuste:
         erros = validate_inputs(
             cliente,
             acabado,
