@@ -13,6 +13,7 @@ import pandas as pd
 import streamlit as st
 
 from core.db_utils import (
+    build_entry_update_payload_from_streamlit,
     build_entry_payload_from_streamlit,
     get_db,
     is_cloud_runtime,
@@ -43,9 +44,11 @@ operadores = get_operadores()
 SCHEMA_VERSION = "1.2"
 PROCESSO_OUTRO = "__PROCESSO_OUTRO__"
 SAVE_SUCCESS_MESSAGE_KEY = "save_success_message"
+ADJUST_SUCCESS_MESSAGE_KEY = "adjust_success_message"
 RESET_FORM_REQUESTED_KEY = "reset_form_requested"
 FORM_VERSION_KEY = "form_version"
 FORM_FIELD_PREFIX = "form_field__"
+ADJUST_FIELD_PREFIX = "adjust_field__"
 BG_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "background.png"
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
@@ -167,6 +170,49 @@ def unique_preserve_order(values):
             seen.add(value)
             result.append(value)
     return result
+
+def add_current_option(options, current_value):
+    current_value = normalize_text(current_value)
+    normalized_options = [normalize_text(option) for option in options if normalize_text(option)]
+    if current_value and current_value not in normalized_options:
+        normalized_options.insert(0, current_value)
+    return unique_preserve_order(normalized_options)
+
+def option_index(options, current_value):
+    current_value = normalize_text(current_value)
+    if current_value in options:
+        return options.index(current_value)
+    return None
+
+def parse_date_value(value):
+    if isinstance(value, date):
+        return value
+    text = normalize_text(value)
+    for fmt in ("%d/%m/%y", "%d/%m/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return date.today()
+
+def parse_time_value(value):
+    if isinstance(value, time):
+        return value
+    text = normalize_text(value)
+    for fmt in ("%H:%M", "%H:%M:%S"):
+        try:
+            return datetime.strptime(text, fmt).time()
+        except ValueError:
+            continue
+    return time(0, 0)
+
+def split_operadores(value):
+    if isinstance(value, list):
+        return [normalize_text(item) for item in value if normalize_text(item)]
+    text = normalize_text(value)
+    if not text:
+        return []
+    return [part.strip() for part in text.split(";") if part.strip()]
 
 def validate_inputs(cliente, acabado, numero_display, ferramental, processo, data_producao,
                    hora_iniciada, hora_finalizada, quantidade_produzida, quantidade_total,
@@ -368,10 +414,272 @@ def render_consulta_screen():
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["📝 Lançamento", "📊 Consulta"])
+def format_entry_option(entry):
+    return (
+        f"#{entry.get('id')} | {entry.get('data_producao') or '-'} | "
+        f"{entry.get('cliente') or '-'} | {entry.get('display') or '-'} | "
+        f"{entry.get('processo') or '-'}"
+    )
+
+def entry_matches_query(entry, query):
+    query = normalize_text(query).lower()
+    if not query:
+        return True
+    searchable = [
+        entry.get("id"),
+        entry.get("cliente"),
+        entry.get("display"),
+        entry.get("numero_display"),
+        entry.get("maquinario"),
+        entry.get("processo"),
+        entry.get("data_producao"),
+        entry.get("operadores"),
+    ]
+    return any(query in normalize_text(value).lower() for value in searchable)
+
+def render_ajustes_screen():
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Ajustar lancamento anterior</div>', unsafe_allow_html=True)
+
+    success_message = st.session_state.pop(ADJUST_SUCCESS_MESSAGE_KEY, None)
+    if success_message:
+        st.success(success_message)
+
+    db = get_db()
+    entries = db.get_all_entries()
+
+    if not entries:
+        st.info("Nenhum registro para ajustar.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    busca = st.text_input(
+        "Buscar",
+        placeholder="ID, cliente, display, codigo, ferramental, processo ou operador",
+        key="adjust_search",
+    )
+    filtered_entries = [entry for entry in entries if entry_matches_query(entry, busca)]
+
+    if not filtered_entries:
+        st.warning("Nenhum lancamento encontrado para esse filtro.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    preview_columns = [
+        "id",
+        "data_producao",
+        "cliente",
+        "display",
+        "numero_display",
+        "maquinario",
+        "processo",
+        "quantidade",
+        "pecas_mortas",
+        "quantidade_total",
+        "operadores",
+    ]
+    preview_df = pd.DataFrame(filtered_entries[:50])
+    visible_columns = [col for col in preview_columns if col in preview_df.columns]
+    st.dataframe(preview_df[visible_columns], hide_index=True, width="stretch")
+    if len(filtered_entries) > 50:
+        st.caption("Mostrando os 50 primeiros resultados do filtro.")
+
+    entry_options = filtered_entries[:200]
+    selected_entry_id = st.selectbox(
+        "Lancamento para ajustar",
+        [entry["id"] for entry in entry_options],
+        format_func=lambda entry_id: format_entry_option(
+            next(entry for entry in entry_options if entry["id"] == entry_id)
+        ),
+        key="adjust_selected_entry_id",
+    )
+    selected_entry = next(entry for entry in entry_options if entry["id"] == selected_entry_id)
+    key_base = f"{ADJUST_FIELD_PREFIX}{selected_entry_id}"
+
+    cliente_key = f"{key_base}__cliente"
+    acabado_key = f"{key_base}__acabado"
+    numero_display_key = f"{key_base}__numero_display"
+    ferramental_key = f"{key_base}__ferramental"
+    processo_key = f"{key_base}__processo"
+    processo_custom_key = f"{key_base}__processo_custom"
+    data_producao_key = f"{key_base}__data_producao"
+    hora_iniciada_key = f"{key_base}__hora_iniciada"
+    hora_finalizada_key = f"{key_base}__hora_finalizada"
+    quantidade_produzida_key = f"{key_base}__quantidade_produzida"
+    pecas_mortas_key = f"{key_base}__pecas_mortas"
+    quantidade_total_key = f"{key_base}__quantidade_total"
+    numero_operadores_key = f"{key_base}__numero_operadores"
+    operadores_multiselect_key = f"{key_base}__operadores_multiselect"
+
+    cliente_atual = st.session_state.get(cliente_key, selected_entry.get("cliente"))
+    cliente_options = add_current_option(choices["clientes"], cliente_atual)
+    cliente = st.selectbox(
+        "Cliente",
+        cliente_options,
+        index=option_index(cliente_options, cliente_atual),
+        key=cliente_key,
+    )
+
+    acabado_atual = st.session_state.get(acabado_key, selected_entry.get("display"))
+    acabado_base_options = get_acabados_for_cliente(cliente) if cliente else choices["acabados"]
+    acabado_options = add_current_option(acabado_base_options, acabado_atual)
+    acabado = st.selectbox(
+        "Display",
+        acabado_options,
+        index=option_index(acabado_options, acabado_atual),
+        key=acabado_key,
+    )
+
+    numero_display = st.text_input(
+        "Codigo (8 digitos)",
+        value=normalize_text(selected_entry.get("numero_display")),
+        key=numero_display_key,
+        max_chars=8,
+    )
+
+    ferramental_atual = st.session_state.get(ferramental_key, selected_entry.get("maquinario"))
+    ferramental_options = add_current_option(choices["ferramentais"], ferramental_atual)
+    ferramental = st.selectbox(
+        "Ferramental",
+        ferramental_options,
+        index=option_index(ferramental_options, ferramental_atual),
+        key=ferramental_key,
+    )
+
+    processo_atual = st.session_state.get(processo_key, selected_entry.get("processo"))
+    processo_base_options = get_process_choices_for_acabado_e_ferramental(acabado, ferramental)
+    processo_options = add_current_option(processo_base_options, processo_atual)
+    processo_options = unique_preserve_order(processo_options + [PROCESSO_OUTRO])
+    processo = st.selectbox(
+        "Processo",
+        processo_options,
+        index=option_index(processo_options, processo_atual),
+        key=processo_key,
+        format_func=lambda x: "Outro (digitar)" if x == PROCESSO_OUTRO else x,
+    )
+    processo_custom = (
+        st.text_input("Nome do processo (novo)", key=processo_custom_key)
+        if processo == PROCESSO_OUTRO
+        else ""
+    )
+    processo_selecionado = processo_custom.strip() if processo == PROCESSO_OUTRO else processo
+
+    data_producao = st.date_input(
+        "Data",
+        value=parse_date_value(selected_entry.get("data_producao")),
+        format="DD/MM/YYYY",
+        key=data_producao_key,
+    )
+    hora_iniciada = st.time_input(
+        "Hora inicio",
+        value=parse_time_value(selected_entry.get("hora_inicio")),
+        key=hora_iniciada_key,
+    )
+    hora_finalizada = st.time_input(
+        "Hora fim",
+        value=parse_time_value(selected_entry.get("hora_fim")),
+        key=hora_finalizada_key,
+    )
+    quantidade_produzida = st.number_input(
+        "Quantidade",
+        min_value=0,
+        step=1,
+        value=int(selected_entry.get("quantidade") or 0),
+        key=quantidade_produzida_key,
+    )
+    pecas_mortas = st.number_input(
+        "Pecas mortas",
+        min_value=0,
+        step=1,
+        value=int(selected_entry.get("pecas_mortas") or 0),
+        key=pecas_mortas_key,
+    )
+    quantidade_total = st.number_input(
+        "Quantidade total",
+        min_value=0,
+        step=1,
+        value=int(selected_entry.get("quantidade_total") or 0),
+        key=quantidade_total_key,
+    )
+    numero_operadores = st.number_input(
+        "Num. operadores",
+        min_value=1,
+        step=1,
+        value=max(1, int(selected_entry.get("numero_operadores") or 1)),
+        key=numero_operadores_key,
+    )
+
+    operadores_atual = st.session_state.get(
+        operadores_multiselect_key,
+        split_operadores(selected_entry.get("operadores")),
+    )
+    operadores_options = unique_preserve_order(operadores_atual + [o for o in operadores if o])
+    operadores_selecionados = st.multiselect(
+        f"Operadores ({len(operadores_atual)}/{numero_operadores})",
+        operadores_options,
+        default=operadores_atual,
+        key=operadores_multiselect_key,
+    )
+
+    if st.button("Salvar ajuste", key=f"{key_base}__save"):
+        erros = validate_inputs(
+            cliente,
+            acabado,
+            numero_display,
+            ferramental,
+            processo_selecionado,
+            data_producao,
+            hora_iniciada,
+            hora_finalizada,
+            quantidade_produzida,
+            quantidade_total,
+            numero_operadores,
+            operadores_selecionados,
+        )
+        if erros:
+            st.error("Erros:\n- " + "\n- ".join(erros))
+        else:
+            registro = {
+                "cliente": cliente,
+                "acabado": acabado,
+                "numero_display": str(numero_display).strip(),
+                "ferramental": ferramental,
+                "processo": processo_selecionado,
+                "data_producao": data_producao.strftime("%d/%m/%y"),
+                "operadores": operadores_selecionados,
+                "hora_iniciada": hora_iniciada.strftime("%H:%M"),
+                "hora_finalizada": hora_finalizada.strftime("%H:%M"),
+                "quantidade_produzida": quantidade_produzida,
+                "pecas_mortas": pecas_mortas,
+                "numero_operadores": numero_operadores,
+                "quantidade_total": quantidade_total,
+            }
+            try:
+                update_data = build_entry_update_payload_from_streamlit(
+                    registro,
+                    selected_entry,
+                    SCHEMA_VERSION,
+                )
+                updated = db.update_entry(selected_entry_id, update_data)
+            except Exception as exc:
+                st.error(f"Erro ao salvar ajuste: {exc}")
+            else:
+                if updated:
+                    st.session_state[ADJUST_SUCCESS_MESSAGE_KEY] = (
+                        f"Lancamento #{selected_entry_id} ajustado com sucesso."
+                    )
+                    st.rerun()
+                else:
+                    st.error("Nao foi possivel encontrar esse lancamento para atualizar.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+tab1, tab2, tab3 = st.tabs(["📝 Lançamento", "✏️ Ajustes", "📊 Consulta"])
 with tab1:
     render_lancamento_screen()
 with tab2:
+    render_ajustes_screen()
+with tab3:
     render_consulta_screen()
 
 st.divider()

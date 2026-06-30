@@ -443,6 +443,19 @@ def build_entry_payload_from_streamlit(payload: dict, schema_version: str) -> di
     return entry_payload
 
 
+def build_entry_update_payload_from_streamlit(
+    payload: dict,
+    existing_entry: dict,
+    schema_version: str,
+) -> dict:
+    """Constroi payload para ajuste preservando dados de controle do registro."""
+    entry_payload = build_entry_payload_from_streamlit(payload, schema_version)
+    entry_payload["schema_version"] = existing_entry.get("schema_version") or schema_version
+    entry_payload["timestamp"] = existing_entry.get("timestamp") or entry_payload["timestamp"]
+    entry_payload["source_hash"] = _build_source_hash(entry_payload)
+    return entry_payload
+
+
 _db_instance = None
 
 
