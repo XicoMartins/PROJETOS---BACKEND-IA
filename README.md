@@ -73,6 +73,33 @@ PROJETOS---BACKEND-IA/
 3. Main file: `streamlit_app.py`
 4. Deploy automático a cada push!
 
+## Login de Acesso
+
+O app exige usuario e senha antes de mostrar lancamentos, ajustes e consultas.
+Configure as credenciais nos Secrets do Streamlit Cloud.
+
+Para gerar o hash da senha:
+
+```bash
+python scripts/gerar_hash_senha.py
+```
+
+Depois cole o resultado nos Secrets:
+
+```toml
+[auth]
+username = "seu_usuario"
+password_hash = "pbkdf2_sha256$260000$..."
+```
+
+Tambem e possivel configurar varios usuarios:
+
+```toml
+[auth.users]
+admin = "pbkdf2_sha256$260000$..."
+pcp = "pbkdf2_sha256$260000$..."
+```
+
 ## Dados & Persistência
 
 **Local:** Dados salvos em `~/.mtech/production.db`  
@@ -117,7 +144,7 @@ Problemas? Verifique:
 ## Roadmap
 
 - [x] Integração com PostgreSQL
-- [ ] Autenticação de usuários
+- [x] Autenticação de usuários
 - [ ] Gráficos e relatórios
 - [ ] API REST
 

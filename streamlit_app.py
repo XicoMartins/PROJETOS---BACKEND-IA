@@ -4,9 +4,12 @@ Versão refatorada sem Django, compatível com Streamlit Cloud"""
 from datetime import datetime, time, date
 import ast
 import base64
+import hashlib
+import hmac
 from io import BytesIO
 import os
 import re
+import secrets as secrets_lib
 from pathlib import Path
 
 import pandas as pd
@@ -39,10 +42,10 @@ def load_base_choices():
         "ferramentais": [v for v, _ in get_unique_choices("FERRAMENTAL") if v],
     }
 
-choices = load_base_choices()
-operadores = get_operadores()
 SCHEMA_VERSION = "1.2"
 PROCESSO_OUTRO = "__PROCESSO_OUTRO__"
+AUTH_SESSION_KEY = "auth_authenticated"
+AUTH_USER_KEY = "auth_user"
 SAVE_SUCCESS_MESSAGE_KEY = "save_success_message"
 ADJUST_SUCCESS_MESSAGE_KEY = "adjust_success_message"
 RESET_FORM_REQUESTED_KEY = "reset_form_requested"
@@ -149,6 +152,104 @@ def set_background(image_path: Path) -> None:
 
 set_background(BG_IMAGE_PATH)
 
+def build_password_hash(password: str, salt: str | None = None, iterations: int = 260000) -> str:
+    salt = salt or secrets_lib.token_hex(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt.encode("utf-8"),
+        iterations,
+    ).hex()
+    return f"pbkdf2_sha256${iterations}${salt}${digest}"
+
+def verify_password(password: str, stored_password: str) -> bool:
+    stored_password = str(stored_password or "")
+    if stored_password.startswith("pbkdf2_sha256$"):
+        try:
+            _algorithm, iterations, salt, expected = stored_password.split("$", 3)
+            candidate = build_password_hash(password, salt=salt, iterations=int(iterations))
+            candidate_hash = candidate.rsplit("$", 1)[-1]
+        except (TypeError, ValueError):
+            return False
+        return hmac.compare_digest(candidate_hash, expected)
+    return hmac.compare_digest(password, stored_password)
+
+def _get_auth_secret(key: str):
+    try:
+        auth_config = st.secrets.get("auth", {})
+        if key in auth_config:
+            return auth_config.get(key)
+    except Exception:
+        pass
+    return os.getenv(f"AUTH_{key.upper()}")
+
+def get_auth_users() -> dict:
+    users = {}
+    try:
+        auth_config = st.secrets.get("auth", {})
+        configured_users = auth_config.get("users", {})
+        if hasattr(configured_users, "items"):
+            users.update({str(user): str(password) for user, password in configured_users.items()})
+    except Exception:
+        pass
+
+    username = _get_auth_secret("username")
+    password_hash = _get_auth_secret("password_hash")
+    password = _get_auth_secret("password")
+    if username and (password_hash or password):
+        users[str(username)] = str(password_hash or password)
+
+    return users
+
+def render_login_screen(users: dict) -> None:
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Acesso restrito</div>', unsafe_allow_html=True)
+
+    if not users:
+        st.error("Login nao configurado. Configure usuario e senha nos Secrets do Streamlit Cloud.")
+        st.code(
+            '[auth]\n'
+            'username = "seu_usuario"\n'
+            'password_hash = "pbkdf2_sha256$..."',
+            language="toml",
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    with st.form("login_form"):
+        username = st.text_input("Usuario")
+        password = st.text_input("Senha", type="password")
+        entrar = st.form_submit_button("Entrar")
+
+    if entrar:
+        stored_password = users.get(username)
+        if stored_password and verify_password(password, stored_password):
+            st.session_state[AUTH_SESSION_KEY] = True
+            st.session_state[AUTH_USER_KEY] = username
+            st.rerun()
+        else:
+            st.error("Usuario ou senha invalidos.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+def require_authentication() -> None:
+    if st.session_state.get(AUTH_SESSION_KEY):
+        return
+    render_login_screen(get_auth_users())
+    st.stop()
+
+def render_logout_control() -> None:
+    user = st.session_state.get(AUTH_USER_KEY, "")
+    col_user, col_button = st.columns([8, 1])
+    with col_user:
+        if user:
+            st.caption(f"Usuario: {user}")
+    with col_button:
+        if st.button("Sair"):
+            st.session_state.pop(AUTH_SESSION_KEY, None)
+            st.session_state.pop(AUTH_USER_KEY, None)
+            st.rerun()
+
 def normalize_operadores(value) -> str:
     if isinstance(value, list):
         return "; ".join(str(v).strip() for v in value if str(v).strip())
@@ -252,6 +353,7 @@ def render_header():
     st.markdown(f'''<div class="app-hero">{logo_img}<div class="hero-text"><h1>Controle Produção</h1><p>MTECH</p></div></div>''', unsafe_allow_html=True)
 
 render_header()
+require_authentication()
 
 try:
     db_status = get_db()
@@ -273,6 +375,9 @@ else:
             "Persistencia externa nao configurada. Configure DATABASE_URL nos Secrets "
             "do Streamlit Cloud antes de usar em producao."
         )
+
+choices = load_base_choices()
+operadores = get_operadores()
 
 if "last_ferramental" not in st.session_state:
     st.session_state.last_ferramental = None
@@ -678,6 +783,8 @@ def render_ajustes_screen():
                     st.error("Nao foi possivel encontrar esse lancamento para atualizar.")
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+render_logout_control()
 
 tab1, tab2, tab3 = st.tabs(["📝 Lançamento", "✏️ Ajustes", "📊 Consulta"])
 with tab1:
