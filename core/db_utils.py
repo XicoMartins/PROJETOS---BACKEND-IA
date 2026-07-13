@@ -336,6 +336,15 @@ class ProductionDB:
             """)
             return [dict(row) for row in cursor.fetchall()]
 
+    def get_all_painting_entries(self) -> List[Dict]:
+        """Retorna todos os lancamentos de pintura ordenados por timestamp."""
+        with self.get_conn() as conn:
+            cursor = conn.execute("""
+                SELECT * FROM painting_entries
+                ORDER BY timestamp DESC, id DESC
+            """)
+            return [dict(row) for row in cursor.fetchall()]
+
     def get_entries_paginated(self, limit: int = 50, offset: int = 0) -> Tuple[List[Dict], int]:
         """Retorna registros com paginacao."""
         with self.get_conn() as conn:
@@ -392,6 +401,37 @@ class ProductionDB:
                     data.get("hora_fim"),
                     data.get("quantidade"),
                     data.get("pecas_mortas"),
+                    data.get("quantidade_total"),
+                    data.get("source_hash"),
+                    entry_id,
+                ),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+
+    def update_painting_entry(self, entry_id: int, data: Dict[str, Any]) -> bool:
+        """Atualiza um lancamento de pintura existente."""
+        ph = self.placeholder
+        with self.get_conn() as conn:
+            cursor = conn.execute(
+                f"""
+                UPDATE painting_entries SET
+                    cliente = {ph}, display = {ph}, numero_display = {ph},
+                    codigo_pintura = {ph}, maquinario = {ph}, processo = {ph},
+                    data_producao = {ph}, hora_lancamento = {ph},
+                    quantidade = {ph}, quantidade_total = {ph}, source_hash = {ph}
+                WHERE id = {ph}
+                """,
+                (
+                    data.get("cliente"),
+                    data.get("display"),
+                    data.get("numero_display"),
+                    data.get("codigo_pintura"),
+                    data.get("maquinario"),
+                    data.get("processo"),
+                    data.get("data_producao"),
+                    data.get("hora_lancamento"),
+                    data.get("quantidade"),
                     data.get("quantidade_total"),
                     data.get("source_hash"),
                     entry_id,
@@ -532,6 +572,36 @@ def build_entry_update_payload_from_streamlit(
     entry_payload["schema_version"] = existing_entry.get("schema_version") or schema_version
     entry_payload["timestamp"] = existing_entry.get("timestamp") or entry_payload["timestamp"]
     entry_payload["source_hash"] = _build_source_hash(entry_payload)
+    return entry_payload
+
+
+def _build_painting_source_hash(payload: dict) -> str:
+    hash_values = ["painting", *[str(payload[key]) for key in sorted(payload)]]
+    return hashlib.sha256("||".join(hash_values).encode("utf-8")).hexdigest()
+
+
+def build_painting_entry_payload_from_streamlit(
+    payload: dict,
+    schema_version: str,
+    existing_entry: Optional[dict] = None,
+) -> dict:
+    """Constroi payload de pintura para inclusao ou ajuste."""
+    existing_entry = existing_entry or {}
+    entry_payload = {
+        "schema_version": existing_entry.get("schema_version") or schema_version,
+        "timestamp": existing_entry.get("timestamp") or datetime.now().isoformat(),
+        "cliente": _normalize_text(payload.get("cliente")),
+        "display": _normalize_text(payload.get("display")),
+        "numero_display": _normalize_text(payload.get("numero_display")),
+        "codigo_pintura": _normalize_text(payload.get("codigo_pintura")),
+        "maquinario": _normalize_text(payload.get("ferramental")),
+        "processo": _normalize_text(payload.get("processo")),
+        "data_producao": _normalize_text(payload.get("data_producao")),
+        "hora_lancamento": _normalize_text(payload.get("hora_lancamento")),
+        "quantidade": _normalize_int(payload.get("quantidade")) or 0,
+        "quantidade_total": _normalize_int(payload.get("quantidade_total")) or 0,
+    }
+    entry_payload["source_hash"] = _build_painting_source_hash(entry_payload)
     return entry_payload
 
 

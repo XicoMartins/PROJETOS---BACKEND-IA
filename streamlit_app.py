@@ -18,6 +18,7 @@ import streamlit as st
 from core.db_utils import (
     build_entry_update_payload_from_streamlit,
     build_entry_payload_from_streamlit,
+    build_painting_entry_payload_from_streamlit,
     get_db,
     is_cloud_runtime,
 )
@@ -50,6 +51,7 @@ AUTH_SESSION_KEY = "auth_authenticated"
 AUTH_USER_KEY = "auth_user"
 SAVE_SUCCESS_MESSAGE_KEY = "save_success_message"
 ADJUST_SUCCESS_MESSAGE_KEY = "adjust_success_message"
+PAINTING_ADJUST_SUCCESS_MESSAGE_KEY = "painting_adjust_success_message"
 RESET_FORM_REQUESTED_KEY = "reset_form_requested"
 FORM_VERSION_KEY = "form_version"
 FORM_FIELD_PREFIX = "form_field__"
@@ -58,6 +60,7 @@ PAINTING_FORM_FIELD_PREFIX = "painting_form_field__"
 PAINTING_SAVE_SUCCESS_MESSAGE_KEY = "painting_save_success_message"
 PAINTING_RESET_FORM_REQUESTED_KEY = "painting_reset_form_requested"
 ADJUST_FIELD_PREFIX = "adjust_field__"
+PAINTING_ADJUST_FIELD_PREFIX = "painting_adjust_field__"
 BG_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "background.png"
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
 
@@ -355,22 +358,7 @@ def salvar_registro(payload: dict):
 
 def salvar_registro_pintura(payload: dict):
     try:
-        registro = {
-            "schema_version": SCHEMA_VERSION,
-            "timestamp": datetime.now().isoformat(),
-            "cliente": normalize_text(payload.get("cliente")),
-            "display": normalize_text(payload.get("display")),
-            "numero_display": normalize_text(payload.get("numero_display")),
-            "codigo_pintura": normalize_text(payload.get("codigo_pintura")),
-            "maquinario": normalize_text(payload.get("ferramental")),
-            "processo": normalize_text(payload.get("processo")),
-            "data_producao": normalize_text(payload.get("data_producao")),
-            "hora_lancamento": normalize_text(payload.get("hora_lancamento")),
-            "quantidade": int(payload.get("quantidade") or 0),
-            "quantidade_total": int(payload.get("quantidade_total") or 0),
-        }
-        hash_values = ["painting", *[str(registro[key]) for key in sorted(registro)]]
-        registro["source_hash"] = hashlib.sha256("||".join(hash_values).encode("utf-8")).hexdigest()
+        registro = build_painting_entry_payload_from_streamlit(payload, SCHEMA_VERSION)
         return get_db().save_painting_entry(registro), None
     except Exception as exc:
         return None, f"Erro: {str(exc)}"
@@ -676,7 +664,246 @@ def entry_matches_query(entry, query):
     ]
     return any(query in normalize_text(value).lower() for value in searchable)
 
-def render_ajustes_screen():
+def painting_entry_matches_query(entry, query):
+    query = normalize_text(query).lower()
+    if not query:
+        return True
+    searchable = [
+        entry.get("id"),
+        entry.get("cliente"),
+        entry.get("display"),
+        entry.get("numero_display"),
+        entry.get("codigo_pintura"),
+        entry.get("maquinario"),
+        entry.get("processo"),
+        entry.get("data_producao"),
+    ]
+    return any(query in normalize_text(value).lower() for value in searchable)
+
+
+def format_painting_entry_option(entry):
+    return (
+        f"#{entry.get('id')} | {entry.get('data_producao') or '-'} | "
+        f"{entry.get('cliente') or '-'} | {entry.get('display') or '-'} | "
+        f"{entry.get('codigo_pintura') or '-'} | {entry.get('processo') or '-'}"
+    )
+
+
+def render_ajustes_pintura_screen():
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Ajustar lançamento de pintura</div>',
+        unsafe_allow_html=True,
+    )
+
+    success_message = st.session_state.pop(PAINTING_ADJUST_SUCCESS_MESSAGE_KEY, None)
+    db = get_db()
+    entries = db.get_all_painting_entries()
+
+    if not entries:
+        st.info("Nenhum lançamento de pintura para ajustar.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    busca = st.text_input(
+        "Buscar lançamento de pintura",
+        placeholder=(
+            "ID, cliente, display, código, código pintura, ferramental ou processo"
+        ),
+        key="painting_adjust_search",
+    )
+    filtered_entries = [
+        entry for entry in entries if painting_entry_matches_query(entry, busca)
+    ]
+
+    if not filtered_entries:
+        st.warning("Nenhum lançamento de pintura encontrado para esse filtro.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    preview_columns = [
+        "id",
+        "data_producao",
+        "hora_lancamento",
+        "cliente",
+        "display",
+        "numero_display",
+        "codigo_pintura",
+        "maquinario",
+        "processo",
+        "quantidade",
+        "quantidade_total",
+    ]
+    preview_df = pd.DataFrame(filtered_entries[:50])
+    visible_columns = [col for col in preview_columns if col in preview_df.columns]
+    st.dataframe(preview_df[visible_columns], hide_index=True, width="stretch")
+    if len(filtered_entries) > 50:
+        st.caption("Mostrando os 50 primeiros resultados do filtro.")
+
+    entry_options = filtered_entries[:200]
+    selected_key = "painting_adjust_selected_entry_id"
+    valid_ids = [entry["id"] for entry in entry_options]
+    if st.session_state.get(selected_key) not in [None, *valid_ids]:
+        st.session_state.pop(selected_key, None)
+    selected_entry_id = st.selectbox(
+        "Lançamento de pintura para ajustar",
+        valid_ids,
+        format_func=lambda entry_id: format_painting_entry_option(
+            next(entry for entry in entry_options if entry["id"] == entry_id)
+        ),
+        key=selected_key,
+    )
+    selected_entry = next(
+        entry for entry in entry_options if entry["id"] == selected_entry_id
+    )
+    key_base = f"{PAINTING_ADJUST_FIELD_PREFIX}{selected_entry_id}"
+
+    cliente_atual = selected_entry.get("cliente")
+    cliente_options = add_current_option(get_painting_choices("CLIENTE"), cliente_atual)
+    cliente = st.selectbox(
+        "Cliente",
+        cliente_options,
+        index=option_index(cliente_options, cliente_atual),
+        key=f"{key_base}__cliente",
+    )
+
+    display_atual = selected_entry.get("display")
+    display_options = add_current_option(
+        get_painting_choices("ACABADO", CLIENTE=cliente), display_atual
+    )
+    display = st.selectbox(
+        "Display",
+        display_options,
+        index=option_index(display_options, display_atual),
+        key=f"{key_base}__display",
+    )
+    numero_display = st.text_input(
+        "Código (8 dígitos)",
+        value=normalize_text(selected_entry.get("numero_display")),
+        max_chars=8,
+        key=f"{key_base}__numero_display",
+    )
+    codigo_pintura = st.text_input(
+        "Código pintura",
+        value=normalize_text(selected_entry.get("codigo_pintura")),
+        key=f"{key_base}__codigo_pintura",
+    )
+
+    ferramental_atual = selected_entry.get("maquinario")
+    ferramental_options = add_current_option(
+        get_painting_choices(
+            "FERRAMENTAL", CLIENTE=cliente, ACABADO=display
+        ),
+        ferramental_atual,
+    )
+    ferramental = st.selectbox(
+        "Ferramental",
+        ferramental_options,
+        index=option_index(ferramental_options, ferramental_atual),
+        key=f"{key_base}__ferramental",
+    )
+
+    processo_atual = selected_entry.get("processo")
+    processo_options = add_current_option(
+        get_painting_process_choices(cliente, display, ferramental), processo_atual
+    )
+    processo = st.selectbox(
+        "Processo",
+        processo_options,
+        index=option_index(processo_options, processo_atual),
+        key=f"{key_base}__processo",
+    )
+    data_producao = st.date_input(
+        "Data",
+        value=parse_date_value(selected_entry.get("data_producao")),
+        format="DD/MM/YYYY",
+        key=f"{key_base}__data_producao",
+    )
+    hora_lancamento = st.time_input(
+        "Hora do lançamento",
+        value=parse_time_value(selected_entry.get("hora_lancamento")),
+        key=f"{key_base}__hora_lancamento",
+    )
+    quantidade = st.number_input(
+        "Quantidade",
+        min_value=0,
+        step=1,
+        value=int(selected_entry.get("quantidade") or 0),
+        key=f"{key_base}__quantidade",
+    )
+    quantidade_total = st.number_input(
+        "Quantidade total",
+        min_value=0,
+        step=1,
+        value=int(selected_entry.get("quantidade_total") or 0),
+        key=f"{key_base}__quantidade_total",
+    )
+
+    save_col, success_col = st.columns([1, 8])
+    with save_col:
+        salvar_ajuste = st.button(
+            "Salvar ajuste", key=f"{key_base}__save_painting"
+        )
+    with success_col:
+        if success_message:
+            st.success(success_message)
+
+    if salvar_ajuste:
+        obrigatorios = [
+            (cliente, "Cliente"),
+            (display, "Display"),
+            (numero_display, "Código"),
+            (codigo_pintura, "Código pintura"),
+            (ferramental, "Ferramental"),
+            (processo, "Processo"),
+        ]
+        erros = [
+            f"{label} obrigatório." for value, label in obrigatorios if not value
+        ]
+        if numero_display and not re.fullmatch(
+            r"\d{8}", str(numero_display).strip()
+        ):
+            erros.append("Código deve ter 8 dígitos.")
+        if quantidade_total < quantidade:
+            erros.append("Quantidade total deve ser >= quantidade.")
+
+        if erros:
+            st.error("Erros:\n- " + "\n- ".join(erros))
+        else:
+            registro = {
+                "cliente": cliente,
+                "display": display,
+                "numero_display": numero_display,
+                "codigo_pintura": codigo_pintura,
+                "ferramental": ferramental,
+                "processo": processo,
+                "data_producao": data_producao.strftime("%d/%m/%y"),
+                "hora_lancamento": hora_lancamento.strftime("%H:%M"),
+                "quantidade": quantidade,
+                "quantidade_total": quantidade_total,
+            }
+            try:
+                update_data = build_painting_entry_payload_from_streamlit(
+                    registro, SCHEMA_VERSION, existing_entry=selected_entry
+                )
+                updated = db.update_painting_entry(selected_entry_id, update_data)
+            except Exception as exc:
+                st.error(f"Erro ao salvar ajuste de pintura: {exc}")
+            else:
+                if updated:
+                    st.session_state[PAINTING_ADJUST_SUCCESS_MESSAGE_KEY] = (
+                        f"Lançamento de pintura #{selected_entry_id} ajustado com sucesso."
+                    )
+                    st.rerun()
+                else:
+                    st.error(
+                        "Não foi possível encontrar esse lançamento de pintura."
+                    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_ajustes_producao_screen():
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Ajustar lancamento anterior</div>', unsafe_allow_html=True)
 
@@ -917,6 +1144,15 @@ def render_ajustes_screen():
                     st.error("Nao foi possivel encontrar esse lancamento para atualizar.")
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_ajustes_screen():
+    tab_producao, tab_pintura_ajuste = st.tabs(["Produção", "Pintura"])
+    with tab_producao:
+        render_ajustes_producao_screen()
+    with tab_pintura_ajuste:
+        render_ajustes_pintura_screen()
+
 
 render_logout_control()
 
