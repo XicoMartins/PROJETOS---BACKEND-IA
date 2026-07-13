@@ -154,6 +154,29 @@ class ProductionDB:
                 CREATE INDEX IF NOT EXISTS idx_source_hash
                 ON production_entries(source_hash)
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS painting_entries (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    schema_version TEXT,
+                    timestamp DATETIME,
+                    cliente TEXT,
+                    display TEXT,
+                    numero_display TEXT,
+                    codigo_pintura TEXT,
+                    maquinario TEXT,
+                    processo TEXT,
+                    data_producao TEXT,
+                    hora_lancamento TEXT,
+                    quantidade INTEGER DEFAULT 0,
+                    quantidade_total INTEGER DEFAULT 0,
+                    source_hash TEXT UNIQUE,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_painting_timestamp
+                ON painting_entries(timestamp DESC)
+            """)
             conn.commit()
 
     def _init_postgres_schema(self):
@@ -189,6 +212,29 @@ class ProductionDB:
                 cursor.execute("""
                     CREATE INDEX IF NOT EXISTS idx_source_hash
                     ON production_entries(source_hash)
+                """)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS painting_entries (
+                        id BIGSERIAL PRIMARY KEY,
+                        schema_version TEXT,
+                        timestamp TIMESTAMPTZ,
+                        cliente TEXT,
+                        display TEXT,
+                        numero_display TEXT,
+                        codigo_pintura TEXT,
+                        maquinario TEXT,
+                        processo TEXT,
+                        data_producao TEXT,
+                        hora_lancamento TEXT,
+                        quantidade INTEGER DEFAULT 0,
+                        quantidade_total INTEGER DEFAULT 0,
+                        source_hash TEXT UNIQUE,
+                        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                cursor.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_painting_timestamp
+                    ON painting_entries(timestamp DESC)
                 """)
             conn.commit()
 
@@ -244,6 +290,39 @@ class ProductionDB:
                 VALUES ({placeholders})
                 """,
                 self._entry_values(data),
+            )
+            conn.commit()
+            return cursor.lastrowid
+
+    def save_painting_entry(self, data: Dict[str, Any]) -> int:
+        """Salva um novo lancamento de pintura sem misturar com a producao."""
+        columns = """
+            schema_version, timestamp, cliente, display, numero_display,
+            codigo_pintura, maquinario, processo, data_producao,
+            hora_lancamento, quantidade, quantidade_total, source_hash
+        """
+        values = (
+            data.get("schema_version"), data.get("timestamp"), data.get("cliente"),
+            data.get("display"), data.get("numero_display"), data.get("codigo_pintura"),
+            data.get("maquinario"), data.get("processo"), data.get("data_producao"),
+            data.get("hora_lancamento"), data.get("quantidade", 0),
+            data.get("quantidade_total", 0), data.get("source_hash"),
+        )
+        placeholders = ", ".join([self.placeholder] * len(values))
+
+        with self.get_conn() as conn:
+            if self.backend == "postgres":
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        f"INSERT INTO painting_entries ({columns}) VALUES ({placeholders}) RETURNING id",
+                        values,
+                    )
+                    entry_id = cursor.fetchone()["id"]
+                conn.commit()
+                return entry_id
+
+            cursor = conn.execute(
+                f"INSERT INTO painting_entries ({columns}) VALUES ({placeholders})", values,
             )
             conn.commit()
             return cursor.lastrowid

@@ -36,6 +36,7 @@ db_backup_*.sqlite3
 *.swp
 *.swo
 *~
+~$*.xlsx
 .vscode/
 .idea/
 *.iml

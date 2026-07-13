@@ -23,6 +23,8 @@ from core.db_utils import (
 )
 from core.excel_utils import (
     get_acabados_for_cliente,
+    get_painting_choices,
+    get_painting_process_choices,
     get_process_choices_for_acabado_e_ferramental,
     get_unique_choices,
     get_operadores,
@@ -51,6 +53,10 @@ ADJUST_SUCCESS_MESSAGE_KEY = "adjust_success_message"
 RESET_FORM_REQUESTED_KEY = "reset_form_requested"
 FORM_VERSION_KEY = "form_version"
 FORM_FIELD_PREFIX = "form_field__"
+PAINTING_FORM_VERSION_KEY = "painting_form_version"
+PAINTING_FORM_FIELD_PREFIX = "painting_form_field__"
+PAINTING_SAVE_SUCCESS_MESSAGE_KEY = "painting_save_success_message"
+PAINTING_RESET_FORM_REQUESTED_KEY = "painting_reset_form_requested"
 ADJUST_FIELD_PREFIX = "adjust_field__"
 BG_IMAGE_PATH = Path(__file__).resolve().parent / "assets" / "background.png"
 LOGO_PATH = Path(__file__).resolve().parent / "assets" / "logo.png"
@@ -347,6 +353,28 @@ def salvar_registro(payload: dict):
     except Exception as exc:
         return None, f"Erro: {str(exc)}"
 
+def salvar_registro_pintura(payload: dict):
+    try:
+        registro = {
+            "schema_version": SCHEMA_VERSION,
+            "timestamp": datetime.now().isoformat(),
+            "cliente": normalize_text(payload.get("cliente")),
+            "display": normalize_text(payload.get("display")),
+            "numero_display": normalize_text(payload.get("numero_display")),
+            "codigo_pintura": normalize_text(payload.get("codigo_pintura")),
+            "maquinario": normalize_text(payload.get("ferramental")),
+            "processo": normalize_text(payload.get("processo")),
+            "data_producao": normalize_text(payload.get("data_producao")),
+            "hora_lancamento": normalize_text(payload.get("hora_lancamento")),
+            "quantidade": int(payload.get("quantidade") or 0),
+            "quantidade_total": int(payload.get("quantidade_total") or 0),
+        }
+        hash_values = ["painting", *[str(registro[key]) for key in sorted(registro)]]
+        registro["source_hash"] = hashlib.sha256("||".join(hash_values).encode("utf-8")).hexdigest()
+        return get_db().save_painting_entry(registro), None
+    except Exception as exc:
+        return None, f"Erro: {str(exc)}"
+
 def render_header():
     logo_b64 = load_image_base64(LOGO_PATH)
     logo_img = f'<img src="data:image/png;base64,{logo_b64}" />' if logo_b64 else '<div class="logo-fallback">MTECH</div>'
@@ -385,8 +413,14 @@ if "last_cliente" not in st.session_state:
     st.session_state.last_cliente = None
 if "operadores_selecionados" not in st.session_state:
     st.session_state.operadores_selecionados = []
+if "last_painting_cliente" not in st.session_state:
+    st.session_state.last_painting_cliente = None
+if "last_painting_display" not in st.session_state:
+    st.session_state.last_painting_display = None
 if FORM_VERSION_KEY not in st.session_state:
     st.session_state[FORM_VERSION_KEY] = 0
+if PAINTING_FORM_VERSION_KEY not in st.session_state:
+    st.session_state[PAINTING_FORM_VERSION_KEY] = 0
 
 def reset_form_fields():
     legacy_keys = ["cliente", "acabado", "ferramental", "processo", "processo_custom", "numero_display",
@@ -404,6 +438,17 @@ def reset_form_fields():
 
 def form_key(name: str) -> str:
     return f"{FORM_FIELD_PREFIX}{st.session_state[FORM_VERSION_KEY]}__{name}"
+
+def reset_painting_form_fields():
+    for key in list(st.session_state.keys()):
+        if isinstance(key, str) and key.startswith(PAINTING_FORM_FIELD_PREFIX):
+            st.session_state.pop(key, None)
+    st.session_state[PAINTING_FORM_VERSION_KEY] += 1
+    st.session_state.last_painting_cliente = None
+    st.session_state.last_painting_display = None
+
+def painting_form_key(name: str) -> str:
+    return f"{PAINTING_FORM_FIELD_PREFIX}{st.session_state[PAINTING_FORM_VERSION_KEY]}__{name}"
 
 def render_lancamento_screen():
     if st.session_state.pop(RESET_FORM_REQUESTED_KEY, False):
@@ -497,6 +542,95 @@ def render_lancamento_screen():
             else:
                 st.error(error or "Erro ao salvar.")
     
+    st.markdown("</div>", unsafe_allow_html=True)
+
+def render_lancamento_pintura_screen():
+    if st.session_state.pop(PAINTING_RESET_FORM_REQUESTED_KEY, False):
+        reset_painting_form_fields()
+
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Lançamentos pintura</div>', unsafe_allow_html=True)
+    success_message = st.session_state.pop(PAINTING_SAVE_SUCCESS_MESSAGE_KEY, None)
+
+    cliente = st.selectbox(
+        "Cliente", get_painting_choices("CLIENTE"), index=None,
+        key=painting_form_key("cliente"),
+    )
+    if st.session_state.last_painting_cliente != cliente:
+        for field in ("display", "ferramental", "processo"):
+            st.session_state.pop(painting_form_key(field), None)
+    st.session_state.last_painting_cliente = cliente
+    display = st.selectbox(
+        "Display", get_painting_choices("ACABADO", CLIENTE=cliente), index=None,
+        key=painting_form_key("display"),
+    )
+    if st.session_state.last_painting_display != display:
+        for field in ("ferramental", "processo"):
+            st.session_state.pop(painting_form_key(field), None)
+    st.session_state.last_painting_display = display
+    numero_display = st.text_input(
+        "Codigo (8 digitos)", max_chars=8, key=painting_form_key("numero_display"),
+    )
+    codigo_pintura = st.text_input("Código pintura", key=painting_form_key("codigo_pintura"))
+    ferramental = st.selectbox(
+        "Ferramental", get_painting_choices("FERRAMENTAL", CLIENTE=cliente, ACABADO=display),
+        index=None, key=painting_form_key("ferramental"),
+    )
+    processo = st.selectbox(
+        "Processo", get_painting_process_choices(cliente, display, ferramental), index=None,
+        key=painting_form_key("processo"),
+    )
+    data_producao = st.date_input(
+        "Data", value=date.today(), format="DD/MM/YYYY", key=painting_form_key("data_producao"),
+    )
+    hora_lancamento = st.time_input(
+        "Hora do lançamento", value=time(0, 0), key=painting_form_key("hora_lancamento"),
+    )
+    quantidade = st.number_input("Quantidade", min_value=0, step=1, key=painting_form_key("quantidade"))
+    quantidade_total = st.number_input(
+        "Quantidade total", min_value=0, step=1, key=painting_form_key("quantidade_total"),
+    )
+
+    save_col, success_col = st.columns([1, 8])
+    with save_col:
+        salvar = st.button("Salvar", key="save_painting_entry")
+    with success_col:
+        if success_message:
+            st.success(success_message)
+
+    if salvar:
+        obrigatorios = [
+            (cliente, "Cliente"), (display, "Display"), (numero_display, "Codigo"),
+            (codigo_pintura, "Código pintura"), (ferramental, "Ferramental"), (processo, "Processo"),
+        ]
+        erros = [f"{label} obrigatorio." for value, label in obrigatorios if not value]
+        if numero_display and not re.fullmatch(r"\d{8}", str(numero_display).strip()):
+            erros.append("Codigo deve ter 8 digitos.")
+        if quantidade_total < quantidade:
+            erros.append("Quantidade total deve ser >= quantidade.")
+
+        if erros:
+            st.error("Erros:\n- " + "\n- ".join(erros))
+        else:
+            entry_id, error = salvar_registro_pintura({
+                "cliente": cliente,
+                "display": display,
+                "numero_display": numero_display,
+                "codigo_pintura": codigo_pintura,
+                "ferramental": ferramental,
+                "processo": processo,
+                "data_producao": data_producao.strftime("%d/%m/%y"),
+                "hora_lancamento": hora_lancamento.strftime("%H:%M"),
+                "quantidade": quantidade,
+                "quantidade_total": quantidade_total,
+            })
+            if entry_id:
+                st.session_state[PAINTING_SAVE_SUCCESS_MESSAGE_KEY] = f"Salvo com sucesso! ID #{entry_id}"
+                st.session_state[PAINTING_RESET_FORM_REQUESTED_KEY] = True
+                st.rerun()
+            else:
+                st.error(error or "Erro ao salvar.")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 def render_consulta_screen():
@@ -786,9 +920,13 @@ def render_ajustes_screen():
 
 render_logout_control()
 
-tab1, tab2, tab3 = st.tabs(["📝 Lançamento", "✏️ Ajustes", "📊 Consulta"])
+tab1, tab_pintura, tab2, tab3 = st.tabs(
+    ["📝 Lançamento", "🎨 Lançamentos pintura", "✏️ Ajustes", "📊 Consulta"]
+)
 with tab1:
     render_lancamento_screen()
+with tab_pintura:
+    render_lancamento_pintura_screen()
 with tab2:
     render_ajustes_screen()
 with tab3:

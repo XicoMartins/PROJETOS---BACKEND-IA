@@ -19,6 +19,7 @@ def _get_base_dir() -> Path:
 
 PLANILHAS_DIR = _get_base_dir() / "planilhas"
 PLANILHAS_DIR.mkdir(exist_ok=True)
+PINTURA_DIR = _get_base_dir() / "PINTURA"
 
 PREFERRED_FILENAMES = [
     "LISTA DE PROCESSO RACK ARAMADO P PILAO.xlsx",
@@ -216,6 +217,60 @@ def get_process_choices_for_acabado_e_ferramental(acabado, ferramental):
             valores.add(str(proc).strip())
 
     return sorted(valores)
+
+
+def load_painting_process_data():
+    """Le as planilhas exclusivas dos lancamentos de pintura."""
+    if not PINTURA_DIR.exists():
+        return []
+
+    data = []
+    for excel_path in sorted(PINTURA_DIR.glob(EXCEL_PATTERN)):
+        if excel_path.name.startswith("~$"):
+            continue
+        wb = load_workbook(excel_path, data_only=True)
+        _ws, rows = _pick_sheet(wb)
+        if not rows or not rows[0]:
+            continue
+
+        headers = rows[0]
+        normalized_headers = {
+            str(value).strip().upper()
+            for value in headers
+            if value not in (None, "")
+        }
+        if not REQUIRED_COLUMNS.issubset(normalized_headers):
+            continue
+
+        for row in rows[1:]:
+            if any(value not in (None, "") for value in row):
+                data.append(dict(zip(headers, row)))
+    return data
+
+
+def get_painting_choices(col_name, **filters):
+    """Retorna valores de pintura, opcionalmente filtrados por outras colunas."""
+    values = set()
+    for row in load_painting_process_data():
+        if any(
+            str(row.get(column) or "").strip() != str(expected or "").strip()
+            for column, expected in filters.items()
+        ):
+            continue
+        value = row.get(col_name)
+        if value not in (None, ""):
+            values.add(str(value).strip())
+    return sorted(values)
+
+
+def get_painting_process_choices(cliente, acabado, ferramental):
+    """Retorna processos de pintura compativeis com os campos selecionados."""
+    return get_painting_choices(
+        "PROCESSO",
+        CLIENTE=cliente,
+        ACABADO=acabado,
+        FERRAMENTAL=ferramental,
+    )
 
 
 def get_operadores():
