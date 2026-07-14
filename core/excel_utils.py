@@ -56,7 +56,7 @@ def _resolve_excel_paths() -> list:
 
         matches = sorted(folder.glob(EXCEL_PATTERN))
         for m in matches:
-            if m.name == OPERADORES_FILENAME:
+            if m.name == OPERADORES_FILENAME or m.name.startswith("~$"):
                 continue
             if m not in found:
                 found.append(m)
@@ -235,7 +235,8 @@ def get_process_by_id(processo_id: object):
     normalized_id = normalize_process_id(processo_id)
     matches = []
 
-    for row in load_process_data():
+    qr_rows = [*load_process_data(), *load_painting_process_data()]
+    for row in qr_rows:
         raw_id = _get_row_value(row, "PROCESSO_ID")
         if raw_id in (None, ""):
             continue

@@ -1,0 +1,192 @@
+{
+  "summary": {
+    "files": 20,
+    "rows": 1122,
+    "preservedIds": 29,
+    "assignedIds": 1093,
+    "firstNewId": "000030",
+    "lastId": "001122"
+  },
+  "files": [
+    {
+      "file": "LISTA DE PROCESSO DISPLAY ARAMADO G.xlsx",
+      "sheet": "Plan1",
+      "rows": 68,
+      "preservedIds": 0,
+      "assignedIds": 68,
+      "firstAssignedId": "000030",
+      "lastAssignedId": "000097"
+    },
+    {
+      "file": "LISTA DE PROCESSO DISPLAY ARAMADO P LOR.xlsx",
+      "sheet": "DISPLAY ARAMADO P LOR",
+      "rows": 32,
+      "preservedIds": 0,
+      "assignedIds": 32,
+      "firstAssignedId": "000098",
+      "lastAssignedId": "000129"
+    },
+    {
+      "file": "LISTA DE PROCESSO DISPLAY ARAMADO P PILÃO.xlsx",
+      "sheet": "Planilha1",
+      "rows": 29,
+      "preservedIds": 29,
+      "assignedIds": 0,
+      "firstAssignedId": null,
+      "lastAssignedId": null
+    },
+    {
+      "file": "LISTA DE PROCESSO ILHA MADEIRA.xlsx",
+      "sheet": "Planilha1",
+      "rows": 33,
+      "preservedIds": 0,
+      "assignedIds": 33,
+      "firstAssignedId": "000130",
+      "lastAssignedId": "000162"
+    },
+    {
+      "file": "LISTA DE PROCESSO PDG POWERADE.xlsx",
+      "sheet": "PDG POWERADE",
+      "rows": 107,
+      "preservedIds": 0,
+      "assignedIds": 107,
+      "firstAssignedId": "000163",
+      "lastAssignedId": "000269"
+    },
+    {
+      "file": "LISTA DE PROCESSO PG + ECO HIBRIDO LADO MENOR.xlsx",
+      "sheet": "Plan1",
+      "rows": 127,
+      "preservedIds": 0,
+      "assignedIds": 127,
+      "firstAssignedId": "000270",
+      "lastAssignedId": "000396"
+    },
+    {
+      "file": "LISTA DE PROCESSO PG LED NEON VERMELHO.xlsx",
+      "sheet": "Plan1",
+      "rows": 152,
+      "preservedIds": 0,
+      "assignedIds": 152,
+      "firstAssignedId": "000397",
+      "lastAssignedId": "000548"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK AS5.xlsx",
+      "sheet": "Planilha1",
+      "rows": 35,
+      "preservedIds": 0,
+      "assignedIds": 35,
+      "firstAssignedId": "000549",
+      "lastAssignedId": "000583"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK CRYSTAL.xlsx",
+      "sheet": "Plan1",
+      "rows": 32,
+      "preservedIds": 0,
+      "assignedIds": 32,
+      "firstAssignedId": "000584",
+      "lastAssignedId": "000615"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK FLEX 4 BDJ.xlsx",
+      "sheet": "Plan1",
+      "rows": 50,
+      "preservedIds": 0,
+      "assignedIds": 50,
+      "firstAssignedId": "000616",
+      "lastAssignedId": "000665"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK GONDOLA.xlsx",
+      "sheet": "Plan1",
+      "rows": 52,
+      "preservedIds": 0,
+      "assignedIds": 52,
+      "firstAssignedId": "000666",
+      "lastAssignedId": "000717"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK KAPO ATACADO FDS.xlsx",
+      "sheet": "Planilha1",
+      "rows": 64,
+      "preservedIds": 0,
+      "assignedIds": 64,
+      "firstAssignedId": "000718",
+      "lastAssignedId": "000781"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK LS+REFPET.xlsx",
+      "sheet": "Planilha1",
+      "rows": 37,
+      "preservedIds": 0,
+      "assignedIds": 37,
+      "firstAssignedId": "000782",
+      "lastAssignedId": "000818"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MEIO PALLET COCA.xlsx",
+      "sheet": "Planilha1",
+      "rows": 63,
+      "preservedIds": 0,
+      "assignedIds": 63,
+      "firstAssignedId": "000819",
+      "lastAssignedId": "000881"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MINI ADES.xlsx",
+      "sheet": "Plan1",
+      "rows": 52,
+      "preservedIds": 0,
+      "assignedIds": 52,
+      "firstAssignedId": "000882",
+      "lastAssignedId": "000933"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MINI BISCOITO.xlsx",
+      "sheet": "Plan1",
+      "rows": 27,
+      "preservedIds": 0,
+      "assignedIds": 27,
+      "firstAssignedId": "000934",
+      "lastAssignedId": "000960"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MINI FLEX 7 BANDEJAS.xlsx",
+      "sheet": "Planilha1",
+      "rows": 29,
+      "preservedIds": 0,
+      "assignedIds": 29,
+      "firstAssignedId": "000961",
+      "lastAssignedId": "000989"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK PARASITA.xlsx",
+      "sheet": "Plan1",
+      "rows": 35,
+      "preservedIds": 0,
+      "assignedIds": 35,
+      "firstAssignedId": "000990",
+      "lastAssignedId": "001024"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK SL 3 BANDEJAS.xlsx",
+      "sheet": "Plan1",
+      "rows": 49,
+      "preservedIds": 0,
+      "assignedIds": 49,
+      "firstAssignedId": "001025",
+      "lastAssignedId": "001073"
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK SL 4 BANDEJAS.xlsx",
+      "sheet": "Plan1",
+      "rows": 49,
+      "preservedIds": 0,
+      "assignedIds": 49,
+      "firstAssignedId": "001074",
+      "lastAssignedId": "001122"
+    }
+  ]
+}

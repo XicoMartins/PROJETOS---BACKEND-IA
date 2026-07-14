@@ -1,0 +1,91 @@
+{
+  "files": 20,
+  "processes": 1122,
+  "firstId": "000001",
+  "lastId": "001122",
+  "duplicates": 0,
+  "originalValuesChanged": 0,
+  "formulaErrors": 0,
+  "details": [
+    {
+      "file": "LISTA DE PROCESSO DISPLAY ARAMADO G.xlsx",
+      "processRows": 68
+    },
+    {
+      "file": "LISTA DE PROCESSO DISPLAY ARAMADO P LOR.xlsx",
+      "processRows": 32
+    },
+    {
+      "file": "LISTA DE PROCESSO DISPLAY ARAMADO P PILÃO.xlsx",
+      "processRows": 29
+    },
+    {
+      "file": "LISTA DE PROCESSO ILHA MADEIRA.xlsx",
+      "processRows": 33
+    },
+    {
+      "file": "LISTA DE PROCESSO PDG POWERADE.xlsx",
+      "processRows": 107
+    },
+    {
+      "file": "LISTA DE PROCESSO PG + ECO HIBRIDO LADO MENOR.xlsx",
+      "processRows": 127
+    },
+    {
+      "file": "LISTA DE PROCESSO PG LED NEON VERMELHO.xlsx",
+      "processRows": 152
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK AS5.xlsx",
+      "processRows": 35
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK CRYSTAL.xlsx",
+      "processRows": 32
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK FLEX 4 BDJ.xlsx",
+      "processRows": 50
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK GONDOLA.xlsx",
+      "processRows": 52
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK KAPO ATACADO FDS.xlsx",
+      "processRows": 64
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK LS+REFPET.xlsx",
+      "processRows": 37
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MEIO PALLET COCA.xlsx",
+      "processRows": 63
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MINI ADES.xlsx",
+      "processRows": 52
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MINI BISCOITO.xlsx",
+      "processRows": 27
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK MINI FLEX 7 BANDEJAS.xlsx",
+      "processRows": 29
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK PARASITA.xlsx",
+      "processRows": 35
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK SL 3 BANDEJAS.xlsx",
+      "processRows": 49
+    },
+    {
+      "file": "LISTA DE PROCESSO RACK SL 4 BANDEJAS.xlsx",
+      "processRows": 49
+    }
+  ]
+}

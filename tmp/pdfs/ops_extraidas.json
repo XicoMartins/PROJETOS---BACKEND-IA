@@ -1,0 +1,500 @@
+[
+  {
+    "pdf": "005.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 1 - Nest 2",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "006.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 3 - Nest 4",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "007.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 5 - Nest 7",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "008.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 8 - Nest 9",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "009.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 10 - Nest 12",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "010.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 13 - Nest 17",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "012.pdf",
+    "paginas": 2,
+    "titulo_op": "2,65mm Nest 1 - Nest 2",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FINA QUENTE 2,65MM 26061198"
+  },
+  {
+    "pdf": "014.pdf",
+    "paginas": 2,
+    "titulo_op": "CORPO ◄J► 120 mm",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( X ) 04 - Guilhotina ( ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "015.pdf",
+    "paginas": 2,
+    "titulo_op": "CORPO ◄J► 210 mm",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( X ) 04 - Guilhotina ( ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "017.pdf",
+    "paginas": 2,
+    "titulo_op": "Tubo Testeira e Corpo 360mm",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 09-MOAGEM ( X ) 09 - Corte Tubo ( ) 23-Lixar"
+    ],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "019.pdf",
+    "paginas": 2,
+    "titulo_op": "Arame Bdj",
+    "marcados": [
+      "( ) 01-MODELAÇÃO ( ) 01 - Vaccum ( X ) 15-Dobra/Corte Arame",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "ARAME BTC TREFILADO 5,00MM 26061198"
+  },
+  {
+    "pdf": "021.pdf",
+    "paginas": 2,
+    "titulo_op": "Bandeja",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198 BDJ DISPLAY CHÃO MARATÁ"
+  },
+  {
+    "pdf": "022.pdf",
+    "paginas": 2,
+    "titulo_op": "Bandeja Amassamento",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198 BDJ DISPLAY CHÃO MARATÁ"
+  },
+  {
+    "pdf": "023.pdf",
+    "paginas": 2,
+    "titulo_op": "J 786mm Lateral",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "024.pdf",
+    "paginas": 2,
+    "titulo_op": "J 1200mm Traseira",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "025.pdf",
+    "paginas": 2,
+    "titulo_op": "J 400mm Base",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "026.pdf",
+    "paginas": 2,
+    "titulo_op": "J 120mm Base",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "027.pdf",
+    "paginas": 2,
+    "titulo_op": "J 210mm Base",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "028.pdf",
+    "paginas": 2,
+    "titulo_op": "Encaixe Tubo Testeira",
+    "marcados": [
+      "( ) 02-VACUUM FORMING ( ) 02 - Serra Fita ( X ) 16-Dobra Chapa",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "031.pdf",
+    "paginas": 2,
+    "titulo_op": "Corpo + Base Curvada",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "032.pdf",
+    "paginas": 2,
+    "titulo_op": "Canaleta Base",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "033.pdf",
+    "paginas": 2,
+    "titulo_op": "Arame Bdj",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "034.pdf",
+    "paginas": 2,
+    "titulo_op": "Canaleta no Corpo",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "035.pdf",
+    "paginas": 2,
+    "titulo_op": "Bdj no Corpo",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "ARAME BTC TREFILADO 5,00MM 26061198"
+  },
+  {
+    "pdf": "036.pdf",
+    "paginas": 2,
+    "titulo_op": "Parachoque",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "038.pdf",
+    "paginas": 2,
+    "titulo_op": "Testeira",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "039.pdf",
+    "paginas": 2,
+    "titulo_op": "Apoio Rodizio",
+    "marcados": [
+      "( ) 04-SERIGRAFIA ( ) 04 - Guilhotina ( X ) 18-Solda Mig",
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto"
+    ],
+    "material_e_dados": "CHAPA LISA FINA QUENTE 2,65MM 26061198"
+  },
+  {
+    "pdf": "042.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 1 - Nest 2 AJUSTADA",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "043.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 3 - Nest 4 AJUSTADA",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "044.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 5 - Nest 6 AJUSTADA",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "045.pdf",
+    "paginas": 2,
+    "titulo_op": "0,75 Nest 7 - Nest 16 AJUSTADA",
+    "marcados": [
+      "( X ) 05-METALURGIA ( ) 05 - Vinco ( ) 19-Solda Ponto",
+      "( ) 06-PINTURA ( X ) 06 - Laser ( ) 20-Pintura"
+    ],
+    "material_e_dados": "CHAPA LISA FRIA ACO 0,75MM 26061198"
+  },
+  {
+    "pdf": "047.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo",
+    "marcados": [],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "048.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira",
+    "marcados": [],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "049.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo",
+    "marcados": [],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "050.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira",
+    "marcados": [],
+    "material_e_dados": "TUBO ACO QUADRADO 20X20X0,90MM - 6,0M 26061198"
+  },
+  {
+    "pdf": "051.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Amarelo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 AM - 0261"
+  },
+  {
+    "pdf": "052.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Amarelo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 | AM - 0261"
+  },
+  {
+    "pdf": "053.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Bordo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 | BD - 0054"
+  },
+  {
+    "pdf": "054.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Bordo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 | BD - 0054"
+  },
+  {
+    "pdf": "055.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Marrom",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 | MR - 0085"
+  },
+  {
+    "pdf": "056.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Marrom",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 | MR - 0085"
+  },
+  {
+    "pdf": "057.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Preto",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "26061198 | PR - 0322"
+  },
+  {
+    "pdf": "058.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Preto",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "PLANO DE CORTE ( ) 12-Corte Ferro ( X ) 26-Envio à Pintura"
+    ],
+    "material_e_dados": "QUANTIDADE TOTAL QTDE LOTE Med.A Med.B Med.C Processo Inf. Complementar"
+  },
+  {
+    "pdf": "059.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Amarelo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | AM - 0261"
+  },
+  {
+    "pdf": "060.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Amarelo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | AM - 0261"
+  },
+  {
+    "pdf": "061.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Bordo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | BD - 0054"
+  },
+  {
+    "pdf": "062.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Bordo",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | BD - 0054"
+  },
+  {
+    "pdf": "063.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Marrom",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | MR - 0085"
+  },
+  {
+    "pdf": "064.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Marrom",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | MR - 0085"
+  },
+  {
+    "pdf": "065.pdf",
+    "paginas": 1,
+    "titulo_op": "Corpo - Pilão - Preto",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "QUANTIDADE TOTAL QTDE LOTE Med.A Med.B Med.C Processo Inf. Complementar"
+  },
+  {
+    "pdf": "066.pdf",
+    "paginas": 1,
+    "titulo_op": "Testeira - Pilão - Preto",
+    "marcados": [
+      "( X ) 06-PINTURA ( ) 06 - Laser ( ) 20-Estampagem",
+      "( ) 13-Corte Barra ( X ) 27-Retorno da Pintura"
+    ],
+    "material_e_dados": "26061198 | PR - 0322"
+  }
+]

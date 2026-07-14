@@ -1,0 +1,424 @@
+[
+  {
+    "file": "LISTA DE PROCESSO DISPLAY ARAMADO G.xlsx",
+    "sheet": "Plan1",
+    "rows": 68,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO DISPLAY ARAMADO P LOR.xlsx",
+    "sheet": "DISPLAY ARAMADO P LOR",
+    "rows": 32,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO DISPLAY ARAMADO P PILÃO.xlsx",
+    "sheet": "Planilha1",
+    "rows": 29,
+    "columns": 7,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL",
+      "PROCESSO_ID"
+    ],
+    "missing": [],
+    "hasProcessId": true,
+    "processIds": [
+      "000001",
+      "000002",
+      "000003",
+      "000004",
+      "000005",
+      "000006",
+      "000007",
+      "000008",
+      "000009",
+      "000010",
+      "000011",
+      "000012",
+      "000013",
+      "000014",
+      "000015",
+      "000016",
+      "000017",
+      "000018",
+      "000019",
+      "000020",
+      "000021",
+      "000022",
+      "000023",
+      "000024",
+      "000025",
+      "000026",
+      "000027",
+      "000028",
+      "000029"
+    ]
+  },
+  {
+    "file": "LISTA DE PROCESSO ILHA MADEIRA.xlsx",
+    "sheet": "Planilha1",
+    "rows": 33,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO PDG POWERADE.xlsx",
+    "sheet": "PDG POWERADE",
+    "rows": 107,
+    "columns": 9,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL",
+      "",
+      "",
+      ""
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO PG + ECO HIBRIDO LADO MENOR.xlsx",
+    "sheet": "Plan1",
+    "rows": 127,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO PG LED NEON VERMELHO.xlsx",
+    "sheet": "Plan1",
+    "rows": 152,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK AS5.xlsx",
+    "sheet": "Planilha1",
+    "rows": 35,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK CRYSTAL.xlsx",
+    "sheet": "Plan1",
+    "rows": 32,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK FLEX 4 BDJ.xlsx",
+    "sheet": "Plan1",
+    "rows": 50,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK GONDOLA.xlsx",
+    "sheet": "Plan1",
+    "rows": 52,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK KAPO ATACADO FDS.xlsx",
+    "sheet": "Planilha1",
+    "rows": 64,
+    "columns": 30,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK LS+REFPET.xlsx",
+    "sheet": "Planilha1",
+    "rows": 37,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK MEIO PALLET COCA.xlsx",
+    "sheet": "Planilha1",
+    "rows": 63,
+    "columns": 30,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK MINI ADES.xlsx",
+    "sheet": "Plan1",
+    "rows": 52,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK MINI BISCOITO.xlsx",
+    "sheet": "Plan1",
+    "rows": 27,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK MINI FLEX 7 BANDEJAS.xlsx",
+    "sheet": "Planilha1",
+    "rows": 29,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK PARASITA.xlsx",
+    "sheet": "Plan1",
+    "rows": 35,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK SL 3 BANDEJAS.xlsx",
+    "sheet": "Plan1",
+    "rows": 49,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  },
+  {
+    "file": "LISTA DE PROCESSO RACK SL 4 BANDEJAS.xlsx",
+    "sheet": "Plan1",
+    "rows": 49,
+    "columns": 6,
+    "headers": [
+      "CLIENTE",
+      "ACABADO",
+      "FERRAMENTAL",
+      "PROCESSO",
+      "QNT",
+      "QNT TOTAL"
+    ],
+    "missing": [],
+    "hasProcessId": false,
+    "processIds": []
+  }
+]

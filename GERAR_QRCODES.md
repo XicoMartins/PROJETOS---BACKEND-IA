@@ -67,3 +67,19 @@ https://formsmtech.streamlit.app/?processo_id=000001
 ```
 
 O botão **Alterar dados manualmente** preserva o funcionamento anterior para exceções.
+
+## Gerar os QR Codes de toda a base
+
+Para processar todas as planilhas da pasta `planilhas` em uma única execução:
+
+```powershell
+python scripts\gerar_qr_base.py `
+  --diretorio "planilhas" `
+  --diretorio "PINTURA" `
+  --saida "qrcodes_processos\base_completa" `
+  --modo id
+```
+
+O gerador valida duplicidades entre planilhas e cria um único
+`manifesto_qr.json`, contendo também o nome da planilha de origem. Os PNGs
+ficam separados em uma subpasta com o mesmo nome de cada planilha.
