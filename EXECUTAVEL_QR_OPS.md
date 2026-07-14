@@ -26,12 +26,16 @@ assinatura digital comercial.
 - uma subpasta para cada lista de processos;
 - os arquivos PNG dos QR Codes.
 
+Se uma subpasta de produto for escolhida, o aplicativo localiza automaticamente a
+pasta `base_completa` acima dela e corrige o caminho exibido.
+
 ## Fluxo de uso
 
 1. Abra `MTECH - QR nas OPs.exe`.
 2. Selecione a pasta das OPs.
 3. Selecione a pasta base dos QR Codes.
 4. Clique em **1. Analisar e associar**.
+   O rodapé mostra o progresso no formato `Analisando PDF 12 de 32`.
 5. Confira a tabela:
    - verde: associação automática confirmada;
    - amarelo/vermelho: exige revisão;
@@ -65,6 +69,10 @@ antes da substituição.
 - PDFs que já contêm QR são bloqueados, salvo quando a opção de reprocessamento for
   marcada conscientemente.
 - Um relatório `RELATORIO_QR_OPS.json` é salvo junto aos PDFs gerados.
+
+Durante a análise, o manifesto é mantido em cache e os PDFs são lidos em paralelo.
+Os PNGs são verificados somente depois da associação e apenas para os processos que
+serão efetivamente inseridos, evitando percorrer toda a base pela rede.
 
 ## Gerar novamente o executável
 

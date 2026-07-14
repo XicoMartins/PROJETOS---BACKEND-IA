@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,11 +9,15 @@ try:
     from reportlab.pdfgen import canvas
 
     from core.op_qr_pdf import (
+        AssociacaoOp,
         DadosOp,
         RegistroQr,
         aplicar_qrs_pdf,
         associar_op,
+        carregar_manifesto,
+        localizar_raiz_qr,
         validar_pdf_resultado,
+        validar_qrs_associados,
     )
 except ModuleNotFoundError as exc:
     Image = None
@@ -111,6 +116,41 @@ class OpQrPdfTests(unittest.TestCase):
             )
             self.assertIn("000001", resultado.pages[0].extract_text())
             validar_pdf_resultado(origem, destino, [registro])
+
+    def test_localiza_manifesto_a_partir_de_subpasta(self):
+        with tempfile.TemporaryDirectory() as pasta_temp:
+            raiz = Path(pasta_temp)
+            subpasta = raiz / "produto" / "processos"
+            subpasta.mkdir(parents=True)
+            (raiz / "manifesto_qr.json").write_text("[]", encoding="utf-8")
+
+            self.assertEqual(localizar_raiz_qr(subpasta), raiz)
+
+    def test_manifesto_nao_valida_todos_os_pngs_antecipadamente(self):
+        with tempfile.TemporaryDirectory() as pasta_temp:
+            raiz = Path(pasta_temp)
+            manifesto = [
+                {
+                    "processo_id": "000001",
+                    "cliente": "Cliente",
+                    "acabado": "DISPLAY TESTE",
+                    "ferramental": "Laser",
+                    "processo": "Processo",
+                    "arquivo_qr": "produto/000001.png",
+                }
+            ]
+            (raiz / "manifesto_qr.json").write_text(
+                json.dumps(manifesto), encoding="utf-8"
+            )
+
+            registros = carregar_manifesto(raiz)
+            associacao = AssociacaoOp(
+                self.dados("Processo"), registros, "ok", "Processo localizado"
+            )
+
+            self.assertEqual(len(registros), 1)
+            with self.assertRaises(FileNotFoundError):
+                validar_qrs_associados([associacao], raiz)
 
 
 if __name__ == "__main__":

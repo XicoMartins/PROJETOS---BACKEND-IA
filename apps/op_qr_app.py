@@ -14,6 +14,7 @@ from core.op_qr_pdf import (
     AssociacaoOp,
     RegistroQr,
     analisar_pasta,
+    localizar_raiz_qr,
     processar_associacoes,
 )
 
@@ -167,13 +168,18 @@ class Aplicativo(tk.Tk):
             encoding="utf-8",
         )
 
-    def _ocupado(self, valor: bool, mensagem: str):
+    def _ocupado(self, valor: bool, mensagem: str, indeterminado: bool = True):
         estado = "disabled" if valor else "normal"
         self.botao_analisar.configure(state=estado)
         self.botao_processar.configure(state="disabled" if valor else self._estado_processar())
         self.status.set(mensagem)
         if valor:
-            self.progresso.start(12)
+            if indeterminado:
+                self.progresso.configure(mode="indeterminate")
+                self.progresso.start(12)
+            else:
+                self.progresso.stop()
+                self.progresso.configure(mode="determinate", value=0)
         else:
             self.progresso.stop()
 
@@ -200,9 +206,36 @@ class Aplicativo(tk.Tk):
         if not ops.is_dir() or not qrs.is_dir():
             messagebox.showwarning("Pastas inválidas", "Selecione a pasta das OPs e a pasta dos QR Codes.")
             return
+        try:
+            qrs = localizar_raiz_qr(qrs)
+        except FileNotFoundError as exc:
+            messagebox.showwarning("Pasta de QR Codes inválida", str(exc))
+            return
+        self.pasta_qrs.set(str(qrs))
+        total_pdfs = sum(1 for item in ops.glob("*.pdf") if item.is_file())
+        if not total_pdfs:
+            messagebox.showwarning("Sem PDFs", "Nenhum PDF foi encontrado na pasta das OPs.")
+            return
         self._salvar_preferencias()
-        self._ocupado(True, "Analisando PDFs e procurando os QR Codes correspondentes...")
-        self._em_thread(lambda: analisar_pasta(ops, qrs), self._analise_concluida)
+        self.progresso.configure(maximum=total_pdfs)
+        self._ocupado(
+            True,
+            f"Preparando análise de {total_pdfs} PDFs...",
+            indeterminado=False,
+        )
+        self._em_thread(
+            lambda: analisar_pasta(ops, qrs, self._progresso_analise),
+            self._analise_concluida,
+        )
+
+    def _progresso_analise(self, atual: int, total: int, arquivo: str):
+        self.after(
+            0,
+            lambda: (
+                self.progresso.configure(value=atual, maximum=total),
+                self.status.set(f"Analisando PDF {atual} de {total}: {arquivo}"),
+            ),
+        )
 
     def _analise_concluida(self, associacoes):
         self.associacoes = associacoes

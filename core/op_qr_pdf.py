@@ -10,10 +10,12 @@ import re
 import shutil
 import tempfile
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
+from typing import Callable
 
 import pdfplumber
 from pypdf import PdfReader, PdfWriter
@@ -50,6 +52,9 @@ class AssociacaoOp:
     candidatos: list[RegistroQr] = field(default_factory=list)
 
 
+_CACHE_MANIFESTO: dict[tuple[str, int, int], list[RegistroQr]] = {}
+
+
 def normalizar(valor: object) -> str:
     texto = unicodedata.normalize("NFKD", str(valor or ""))
     texto = texto.encode("ascii", "ignore").decode("ascii").upper()
@@ -68,12 +73,33 @@ def _produto_sem_codigo(valor: str) -> str:
     return re.sub(r"\s+\d+\s*$", "", valor).strip()
 
 
+def localizar_raiz_qr(caminho: Path) -> Path:
+    """Localiza o manifesto na pasta escolhida ou em uma de suas pastas-pai."""
+    atual = caminho
+    for _ in range(6):
+        if (atual / "manifesto_qr.json").is_file():
+            return atual
+        if atual.parent == atual:
+            break
+        atual = atual.parent
+    raise FileNotFoundError(
+        "manifesto_qr.json não encontrado. Selecione a pasta base_completa "
+        "ou uma de suas subpastas."
+    )
+
+
 def carregar_manifesto(raiz_qr: Path) -> list[RegistroQr]:
+    raiz_qr = localizar_raiz_qr(raiz_qr)
     manifesto = raiz_qr / "manifesto_qr.json"
     if not manifesto.is_file():
         raise FileNotFoundError(
             f"manifesto_qr.json não encontrado na pasta de QR Codes: {raiz_qr}"
         )
+    estado = manifesto.stat()
+    chave_cache = (str(manifesto), estado.st_mtime_ns, estado.st_size)
+    armazenado = _CACHE_MANIFESTO.get(chave_cache)
+    if armazenado is not None:
+        return armazenado
     dados = json.loads(manifesto.read_text(encoding="utf-8"))
     if not isinstance(dados, list):
         raise ValueError("manifesto_qr.json inválido")
@@ -96,12 +122,34 @@ def carregar_manifesto(raiz_qr: Path) -> list[RegistroQr]:
         )
         if not registro.processo or not registro.acabado or not registro.arquivo_qr:
             raise ValueError(f"Registro incompleto no manifesto: {processo_id}")
-        caminho_qr = raiz_qr / registro.arquivo_qr
-        if not caminho_qr.is_file():
-            raise FileNotFoundError(f"QR Code não encontrado: {caminho_qr}")
         ids.add(processo_id)
         registros.append(registro)
+    _CACHE_MANIFESTO.clear()
+    _CACHE_MANIFESTO[chave_cache] = registros
     return registros
+
+
+def validar_qrs_associados(
+    associacoes: list[AssociacaoOp], raiz_qr: Path
+) -> None:
+    """Valida somente os PNGs que realmente serão inseridos nos PDFs."""
+    ausentes: list[str] = []
+    vistos: set[str] = set()
+    for associacao in associacoes:
+        for registro in associacao.registros:
+            if registro.processo_id in vistos:
+                continue
+            vistos.add(registro.processo_id)
+            caminho = raiz_qr / registro.arquivo_qr
+            if not caminho.is_file():
+                ausentes.append(f"{registro.processo_id}: {caminho}")
+    if ausentes:
+        detalhes = "\n".join(ausentes[:20])
+        complemento = "\n..." if len(ausentes) > 20 else ""
+        raise FileNotFoundError(
+            f"{len(ausentes)} QR Code(s) associado(s) não foram encontrados:\n"
+            f"{detalhes}{complemento}"
+        )
 
 
 def extrair_dados_op(caminho: Path) -> DadosOp:
@@ -329,7 +377,11 @@ def associar_op(dados: DadosOp, registros: list[RegistroQr]) -> AssociacaoOp:
     )
 
 
-def analisar_pasta(pasta_ops: Path, raiz_qr: Path) -> list[AssociacaoOp]:
+def analisar_pasta(
+    pasta_ops: Path,
+    raiz_qr: Path,
+    progresso: Callable[[int, int, str], None] | None = None,
+) -> list[AssociacaoOp]:
     if not pasta_ops.is_dir():
         raise FileNotFoundError(f"Pasta de OPs não encontrada: {pasta_ops}")
     pdfs = sorted(
@@ -339,7 +391,21 @@ def analisar_pasta(pasta_ops: Path, raiz_qr: Path) -> list[AssociacaoOp]:
     if not pdfs:
         raise ValueError("Nenhum PDF foi encontrado na pasta de OPs")
     registros = carregar_manifesto(raiz_qr)
-    return [associar_op(extrair_dados_op(pdf), registros) for pdf in pdfs]
+    dados: list[DadosOp | None] = [None] * len(pdfs)
+    trabalhadores = min(4, len(pdfs))
+    with ThreadPoolExecutor(max_workers=trabalhadores) as executor:
+        futuros = {
+            executor.submit(extrair_dados_op, pdf): indice
+            for indice, pdf in enumerate(pdfs)
+        }
+        concluidos = 0
+        for futuro in as_completed(futuros):
+            indice = futuros[futuro]
+            dados[indice] = futuro.result()
+            concluidos += 1
+            if progresso:
+                progresso(concluidos, len(pdfs), pdfs[indice].name)
+    return [associar_op(item, registros) for item in dados if item is not None]
 
 
 def _colunas_para(quantidade: int) -> int:
@@ -475,6 +541,7 @@ def processar_associacoes(
     substituir_originais: bool = False,
     permitir_reprocessar: bool = False,
 ) -> tuple[Path, dict]:
+    raiz_qr = localizar_raiz_qr(raiz_qr)
     pendentes = [item for item in associacoes if item.status not in {"ok", "manual"}]
     if pendentes:
         raise ValueError(
@@ -485,6 +552,7 @@ def processar_associacoes(
         raise ValueError(
             f"{len(ja_processados)} PDFs já possuem IDs de QR; habilite o reprocessamento"
         )
+    validar_qrs_associados(associacoes, raiz_qr)
 
     pasta_ops = associacoes[0].dados.arquivo.parent
     instante = datetime.now().strftime("%Y%m%d_%H%M%S")
