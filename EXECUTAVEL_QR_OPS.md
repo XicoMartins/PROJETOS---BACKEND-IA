@@ -73,6 +73,8 @@ antes da substituição.
 - Todos os IDs associados precisam aparecer no PDF final.
 - PDFs que já contêm QR são bloqueados, salvo quando a opção de reprocessamento for
   marcada conscientemente.
+- Números de seis dígitos presentes no conteúdo da OP só são tratados como QR já
+  inserido quando também existem como `processo_id` no manifesto.
 - Um relatório `RELATORIO_QR_OPS.json` é salvo junto aos PDFs gerados.
 
 Durante a análise, o manifesto é mantido em cache e os PDFs são lidos em paralelo.

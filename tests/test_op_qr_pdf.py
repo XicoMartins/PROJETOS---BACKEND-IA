@@ -93,6 +93,16 @@ class OpQrPdfTests(unittest.TestCase):
         self.assertEqual(resultado.status, "ok")
         self.assertEqual(resultado.registros[0].processo_id, "000011")
 
+    def test_ignora_numero_de_seis_digitos_que_nao_e_id_de_qr(self):
+        registros = [self.registro("000010", "Processo A")]
+        dados = self.dados("Processo A", ids=["251050"])
+
+        resultado = associar_op(dados, registros)
+
+        self.assertEqual(resultado.status, "ok")
+        self.assertEqual(resultado.registros[0].processo_id, "000010")
+        self.assertEqual(dados.ids_existentes, [])
+
     def test_aplica_qr_sem_alterar_tamanho_ou_paginas(self):
         with tempfile.TemporaryDirectory() as pasta_temp:
             pasta = Path(pasta_temp)

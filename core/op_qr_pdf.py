@@ -316,8 +316,10 @@ def _associar_pintura(
 def associar_op(dados: DadosOp, registros: list[RegistroQr]) -> AssociacaoOp:
     if dados.ids_existentes:
         por_id = {item.processo_id: item for item in registros}
-        encontrados = [por_id[item] for item in dados.ids_existentes if item in por_id]
-        if len(encontrados) == len(dados.ids_existentes):
+        ids_qr = [item for item in dados.ids_existentes if item in por_id]
+        dados.ids_existentes = ids_qr
+        encontrados = [por_id[item] for item in ids_qr]
+        if encontrados:
             return AssociacaoOp(
                 dados,
                 encontrados,

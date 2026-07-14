@@ -204,7 +204,13 @@ class Aplicativo(tk.Tk):
                 self.after(0, self._cancelado)
             except Exception as exc:
                 detalhes = traceback.format_exc()
-                self.after(0, lambda: self._erro(str(exc), detalhes))
+                mensagem = str(exc)
+                self.after(
+                    0,
+                    lambda mensagem=mensagem, detalhes=detalhes: self._erro(
+                        mensagem, detalhes
+                    ),
+                )
             else:
                 self.after(0, lambda: sucesso(resultado))
         threading.Thread(target=executar, daemon=True).start()
