@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 from openpyxl import load_workbook
 
+from core.qr_utils import normalize_process_id
+
 # Cache simples em memoria
 _DATA_CACHE = None
 _DATA_CACHE_SIGNATURE = None
@@ -217,6 +219,52 @@ def get_process_choices_for_acabado_e_ferramental(acabado, ferramental):
             valores.add(str(proc).strip())
 
     return sorted(valores)
+
+
+def _get_row_value(row: dict, column_name: str):
+    """Busca uma coluna sem depender de maiúsculas ou espaços no cabeçalho."""
+    expected = column_name.strip().upper()
+    for key, value in row.items():
+        if str(key or "").strip().upper() == expected:
+            return value
+    return None
+
+
+def get_process_by_id(processo_id: object):
+    """Retorna os dados fixos de um PROCESSO_ID único ou None se não existir."""
+    normalized_id = normalize_process_id(processo_id)
+    matches = []
+
+    for row in load_process_data():
+        raw_id = _get_row_value(row, "PROCESSO_ID")
+        if raw_id in (None, ""):
+            continue
+        try:
+            row_id = normalize_process_id(raw_id)
+        except ValueError as exc:
+            raise ValueError(f"PROCESSO_ID inválido na base: {raw_id!r}") from exc
+        if row_id == normalized_id:
+            matches.append(row)
+
+    if not matches:
+        return None
+    if len(matches) > 1:
+        raise ValueError(f"PROCESSO_ID duplicado na base: {normalized_id}")
+
+    row = matches[0]
+    result = {
+        "processo_id": normalized_id,
+        "cliente": str(_get_row_value(row, "CLIENTE") or "").strip(),
+        "acabado": str(_get_row_value(row, "ACABADO") or "").strip(),
+        "ferramental": str(_get_row_value(row, "FERRAMENTAL") or "").strip(),
+        "processo": str(_get_row_value(row, "PROCESSO") or "").strip(),
+    }
+    missing = [key for key in ("cliente", "acabado", "ferramental", "processo") if not result[key]]
+    if missing:
+        raise ValueError(
+            f"PROCESSO_ID {normalized_id} possui dados obrigatórios vazios: {', '.join(missing)}"
+        )
+    return result
 
 
 def load_painting_process_data():

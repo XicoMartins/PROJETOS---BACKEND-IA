@@ -26,10 +26,12 @@ from core.excel_utils import (
     get_acabados_for_cliente,
     get_painting_choices,
     get_painting_process_choices,
+    get_process_by_id,
     get_process_choices_for_acabado_e_ferramental,
     get_unique_choices,
     get_operadores,
 )
+from core.qr_utils import extract_process_id
 
 st.set_page_config(
     page_title="Registro de Producao",
@@ -55,6 +57,12 @@ PAINTING_ADJUST_SUCCESS_MESSAGE_KEY = "painting_adjust_success_message"
 RESET_FORM_REQUESTED_KEY = "reset_form_requested"
 FORM_VERSION_KEY = "form_version"
 FORM_FIELD_PREFIX = "form_field__"
+QR_INPUT_KEY = "qr_process_input"
+QR_CONTEXT_KEY = "qr_process_context"
+QR_ERROR_KEY = "qr_process_error"
+QR_INPUT_RESET_REQUESTED_KEY = "qr_input_reset_requested"
+QR_FOCUS_REQUESTED_KEY = "qr_focus_requested"
+QR_LAST_QUERY_KEY = "qr_last_query"
 PAINTING_FORM_VERSION_KEY = "painting_form_version"
 PAINTING_FORM_FIELD_PREFIX = "painting_form_field__"
 PAINTING_SAVE_SUCCESS_MESSAGE_KEY = "painting_save_success_message"
@@ -407,6 +415,8 @@ if "last_painting_display" not in st.session_state:
     st.session_state.last_painting_display = None
 if FORM_VERSION_KEY not in st.session_state:
     st.session_state[FORM_VERSION_KEY] = 0
+if QR_FOCUS_REQUESTED_KEY not in st.session_state:
+    st.session_state[QR_FOCUS_REQUESTED_KEY] = True
 if PAINTING_FORM_VERSION_KEY not in st.session_state:
     st.session_state[PAINTING_FORM_VERSION_KEY] = 0
 
@@ -423,9 +433,89 @@ def reset_form_fields():
     st.session_state.last_cliente = None
     st.session_state.last_ferramental = None
     st.session_state.operadores_selecionados = []
+    st.session_state.pop(QR_CONTEXT_KEY, None)
+    st.session_state.pop(QR_ERROR_KEY, None)
+    st.session_state.pop(QR_INPUT_KEY, None)
+    st.session_state.pop(QR_INPUT_RESET_REQUESTED_KEY, None)
+    st.session_state[QR_FOCUS_REQUESTED_KEY] = True
 
 def form_key(name: str) -> str:
     return f"{FORM_FIELD_PREFIX}{st.session_state[FORM_VERSION_KEY]}__{name}"
+
+
+def load_qr_process(raw_value) -> None:
+    """Resolve o conteúdo lido e guarda somente dados consultados na base."""
+    try:
+        processo_id = extract_process_id(raw_value)
+        process_data = get_process_by_id(processo_id)
+        if process_data is None:
+            raise ValueError(f"PROCESSO_ID não encontrado: {processo_id}")
+    except (OSError, ValueError) as exc:
+        st.session_state.pop(QR_CONTEXT_KEY, None)
+        st.session_state[QR_ERROR_KEY] = str(exc)
+        st.session_state[QR_FOCUS_REQUESTED_KEY] = True
+    else:
+        st.session_state[QR_CONTEXT_KEY] = process_data
+        st.session_state.pop(QR_ERROR_KEY, None)
+        for field in ("cliente", "acabado", "ferramental", "processo", "processo_custom"):
+            st.session_state.pop(form_key(field), None)
+        st.session_state.last_cliente = None
+        st.session_state.last_ferramental = None
+    finally:
+        st.session_state[QR_INPUT_RESET_REQUESTED_KEY] = True
+
+
+def handle_qr_scan() -> None:
+    load_qr_process(st.session_state.get(QR_INPUT_KEY, ""))
+
+
+def load_qr_query_param() -> None:
+    query_value = st.query_params.get("processo_id")
+    if isinstance(query_value, list):
+        query_value = query_value[0] if query_value else None
+    if query_value in (None, ""):
+        return
+
+    marker = str(query_value).strip()
+    if st.session_state.get(QR_LAST_QUERY_KEY) == marker:
+        return
+    st.session_state[QR_LAST_QUERY_KEY] = marker
+    load_qr_process(marker)
+
+
+def configure_qr_input(should_focus: bool) -> None:
+    """Devolve o foco ao leitor depois de abrir ou limpar o formulário."""
+    focus_value = "true" if should_focus else "false"
+    st.iframe(
+        f"""
+        <script>
+        setTimeout(() => {{
+            const input = window.parent.document.querySelector(
+                'input[aria-label="Ler QR Code ou informar ID do processo"]'
+            );
+            if (input) {{
+                if (input.dataset.qrEnterBlurBoundV2 !== 'true') {{
+                    input.dataset.qrEnterBlurBoundV2 = 'true';
+                    input.addEventListener('keydown', (event) => {{
+                        if (event.key === 'Enter') {{
+                            event.preventDefault();
+                            event.stopImmediatePropagation();
+                            input.blur();
+                        }}
+                    }}, true);
+                }}
+                if ({focus_value}) {{
+                    input.focus();
+                    input.select();
+                }}
+            }}
+        }}, 150);
+        </script>
+        """,
+        height=1,
+        width="content",
+        tab_index=-1,
+    )
 
 def reset_painting_form_fields():
     for key in list(st.session_state.keys()):
@@ -442,10 +532,30 @@ def render_lancamento_screen():
     if st.session_state.pop(RESET_FORM_REQUESTED_KEY, False):
         reset_form_fields()
 
+    load_qr_query_param()
+    if st.session_state.pop(QR_INPUT_RESET_REQUESTED_KEY, False):
+        st.session_state[QR_INPUT_KEY] = ""
+
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Lançamento</div>', unsafe_allow_html=True)
 
     success_message = st.session_state.pop(SAVE_SUCCESS_MESSAGE_KEY, None)
+    should_focus_qr = st.session_state.pop(QR_FOCUS_REQUESTED_KEY, False)
+
+    st.text_input(
+        "Ler QR Code ou informar ID do processo",
+        key=QR_INPUT_KEY,
+        placeholder="Ex.: 000001",
+        on_change=handle_qr_scan,
+    )
+    st.caption("O leitor USB pode enviar somente o ID ou a URL completa do processo.")
+    configure_qr_input(should_focus_qr)
+
+    qr_error = st.session_state.get(QR_ERROR_KEY)
+    if qr_error:
+        st.error(qr_error)
+
+    qr_process = st.session_state.get(QR_CONTEXT_KEY)
 
     cliente_key = form_key("cliente")
     acabado_key = form_key("acabado")
@@ -462,27 +572,59 @@ def render_lancamento_screen():
     numero_operadores_key = form_key("numero_operadores")
     operadores_multiselect_key = form_key("operadores_multiselect")
 
-    cliente = st.selectbox("Cliente", choices["clientes"], index=None, key=cliente_key)
-    if st.session_state.last_cliente != cliente:
-        st.session_state.pop(acabado_key, None)
-    st.session_state.last_cliente = cliente
-    
-    acabado_options = get_acabados_for_cliente(cliente) if cliente else choices["acabados"]
-    acabado = st.selectbox("Display", acabado_options, index=None, key=acabado_key)
+    if qr_process:
+        st.success(f"Processo {qr_process['processo_id']} identificado pelo QR Code.")
+        with st.container(border=True):
+            left_column, right_column = st.columns(2)
+            with left_column:
+                st.markdown(f"**Cliente:** {qr_process['cliente']}")
+                st.markdown(f"**Display:** {qr_process['acabado']}")
+            with right_column:
+                st.markdown(f"**Ferramental:** {qr_process['ferramental']}")
+                st.markdown(f"**Processo:** {qr_process['processo']}")
+        if st.button("Alterar dados manualmente", key=form_key("use_manual_data")):
+            st.session_state.pop(QR_CONTEXT_KEY, None)
+            st.session_state.pop(QR_ERROR_KEY, None)
+            st.session_state[QR_INPUT_RESET_REQUESTED_KEY] = True
+            st.rerun()
+
+        cliente = qr_process["cliente"]
+        acabado = qr_process["acabado"]
+        ferramental = qr_process["ferramental"]
+        processo_selecionado = qr_process["processo"]
+    else:
+        cliente = st.selectbox("Cliente", choices["clientes"], index=None, key=cliente_key)
+        if st.session_state.last_cliente != cliente:
+            st.session_state.pop(acabado_key, None)
+        st.session_state.last_cliente = cliente
+
+        acabado_options = get_acabados_for_cliente(cliente) if cliente else choices["acabados"]
+        acabado = st.selectbox("Display", acabado_options, index=None, key=acabado_key)
+
+        ferramental = st.selectbox("Ferramental", choices["ferramentais"], index=None, key=ferramental_key)
+
+        if st.session_state.last_ferramental != ferramental:
+            st.session_state.pop(processo_key, None)
+        st.session_state.last_ferramental = ferramental
+
+        processo_options = get_process_choices_for_acabado_e_ferramental(acabado, ferramental)
+        processo_options_with_outro = processo_options + [PROCESSO_OUTRO]
+        processo = st.selectbox(
+            "Processo",
+            processo_options_with_outro,
+            index=None,
+            key=processo_key,
+            format_func=lambda x: "Outro (digitar)" if x == PROCESSO_OUTRO else x,
+        )
+
+        processo_custom = (
+            st.text_input("Nome do processo (novo)", key=processo_custom_key)
+            if processo == PROCESSO_OUTRO
+            else ""
+        )
+        processo_selecionado = processo_custom.strip() if processo == PROCESSO_OUTRO else processo
+
     numero_display = st.text_input("Codigo (8 digitos)", key=numero_display_key, max_chars=8)
-    ferramental = st.selectbox("Ferramental", choices["ferramentais"], index=None, key=ferramental_key)
-    
-    if st.session_state.last_ferramental != ferramental:
-        st.session_state.pop(processo_key, None)
-    st.session_state.last_ferramental = ferramental
-    
-    processo_options = get_process_choices_for_acabado_e_ferramental(acabado, ferramental)
-    processo_options_with_outro = processo_options + [PROCESSO_OUTRO]
-    processo = st.selectbox("Processo", processo_options_with_outro, index=None, key=processo_key,
-                           format_func=lambda x: "Outro (digitar)" if x == PROCESSO_OUTRO else x)
-    
-    processo_custom = st.text_input("Nome do processo (novo)", key=processo_custom_key) if processo == PROCESSO_OUTRO else ""
-    processo_selecionado = processo_custom.strip() if processo == PROCESSO_OUTRO else processo
     
     data_producao = st.date_input("Data", value=date.today(), format="DD/MM/YYYY", key=data_producao_key)
     hora_iniciada = st.time_input("Hora início", value=time(0,0), key=hora_iniciada_key)
@@ -500,12 +642,27 @@ def render_lancamento_screen():
     
     save_col, success_col = st.columns([1, 8])
     with save_col:
-        salvar = st.button("Salvar")
+        salvar = st.button("Salvar e ler próximo")
     with success_col:
         if success_message:
             st.success(success_message)
 
     if salvar:
+        if qr_process:
+            try:
+                refreshed_process = get_process_by_id(qr_process["processo_id"])
+                if refreshed_process is None:
+                    raise ValueError(
+                        f"PROCESSO_ID não encontrado: {qr_process['processo_id']}"
+                    )
+            except (OSError, ValueError) as exc:
+                st.error(f"Não foi possível validar novamente o QR: {exc}")
+                st.stop()
+            cliente = refreshed_process["cliente"]
+            acabado = refreshed_process["acabado"]
+            ferramental = refreshed_process["ferramental"]
+            processo_selecionado = refreshed_process["processo"]
+
         erros = validate_inputs(cliente, acabado, numero_display, ferramental, processo_selecionado,
                                data_producao, hora_iniciada, hora_finalizada, quantidade_produzida,
                                quantidade_total, numero_operadores, operadores_selecionados)
