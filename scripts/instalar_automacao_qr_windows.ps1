@@ -5,13 +5,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Raiz = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$Python = Join-Path $Raiz "venv\Scripts\python.exe"
+$Python = Join-Path $Raiz "venv\Scripts\pythonw.exe"
 $Script = Join-Path $Raiz "scripts\automacao_planilhas_qr.py"
 $Config = Join-Path $Raiz "automacao_qr\config.local.json"
 $Exemplo = Join-Path $Raiz "automacao_qr\config.example.json"
 
 if (-not (Test-Path -LiteralPath $Python)) {
-    throw "Python do ambiente virtual não encontrado: $Python"
+    throw "Python sem janela do ambiente virtual não encontrado: $Python"
 }
 if (-not (Test-Path -LiteralPath $Config)) {
     Copy-Item -LiteralPath $Exemplo -Destination $Config
