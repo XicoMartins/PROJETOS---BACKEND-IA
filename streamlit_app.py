@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer
 
 from core.db_utils import (
     build_entry_update_payload_from_streamlit,
@@ -32,6 +33,7 @@ from core.excel_utils import (
     get_operadores,
 )
 from core.qr_utils import extract_process_id
+from core.qr_video import QRVideoProcessor
 
 st.set_page_config(
     page_title="Registro de Producao",
@@ -63,6 +65,7 @@ QR_ERROR_KEY = "qr_process_error"
 QR_INPUT_RESET_REQUESTED_KEY = "qr_input_reset_requested"
 QR_FOCUS_REQUESTED_KEY = "qr_focus_requested"
 QR_LAST_QUERY_KEY = "qr_last_query"
+QR_VIDEO_STOP_REQUESTED_KEY = "qr_video_stop_requested"
 PAINTING_FORM_VERSION_KEY = "painting_form_version"
 PAINTING_FORM_FIELD_PREFIX = "painting_form_field__"
 PAINTING_SAVE_SUCCESS_MESSAGE_KEY = "painting_save_success_message"
@@ -517,6 +520,60 @@ def configure_qr_input(should_focus: bool) -> None:
         tab_index=-1,
     )
 
+
+def render_qr_video_reader() -> None:
+    """Mostra a camera continua e envia a leitura para o fluxo QR existente."""
+    stop_requested = st.session_state.pop(QR_VIDEO_STOP_REQUESTED_KEY, False)
+
+    with st.expander("Ler QR Code pela camera do celular"):
+        st.caption(
+            "Toque em Iniciar camera, autorize o acesso e aponte a camera "
+            "traseira para um unico QR Code. A leitura para automaticamente."
+        )
+
+        context = webrtc_streamer(
+            key="qr-video-reader",
+            video_processor_factory=QRVideoProcessor,
+            media_stream_constraints={
+                "video": {
+                    "facingMode": {"ideal": "environment"},
+                    "width": {"ideal": 1280},
+                    "height": {"ideal": 720},
+                },
+                "audio": False,
+            },
+            rtc_configuration={
+                "iceServers": [
+                    {"urls": "stun:stun.l.google.com:19302"},
+                ]
+            },
+            desired_playing_state=False if stop_requested else None,
+            async_processing=True,
+            translations={
+                "start": "Iniciar camera",
+                "stop": "Parar camera",
+            },
+        )
+
+        @st.fragment(run_every=0.3 if context.state.playing else None)
+        def poll_qr_video() -> None:
+            processor = context.video_processor
+            if processor is None:
+                if context.state.playing:
+                    st.caption("Iniciando a leitura do video...")
+                return
+
+            value = processor.pop_detected_value()
+            if value:
+                st.session_state[QR_VIDEO_STOP_REQUESTED_KEY] = True
+                load_qr_process(value)
+                st.rerun()
+
+            if context.state.playing:
+                st.caption("Camera ativa: procurando QR Code...")
+
+        poll_qr_video()
+
 def reset_painting_form_fields():
     for key in list(st.session_state.keys()):
         if isinstance(key, str) and key.startswith(PAINTING_FORM_FIELD_PREFIX):
@@ -556,6 +613,8 @@ def render_lancamento_screen():
         st.error(qr_error)
 
     qr_process = st.session_state.get(QR_CONTEXT_KEY)
+    if qr_process is None:
+        render_qr_video_reader()
 
     cliente_key = form_key("cliente")
     acabado_key = form_key("acabado")
