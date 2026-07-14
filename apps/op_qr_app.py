@@ -12,6 +12,7 @@ from tkinter import filedialog, messagebox, ttk
 
 from core.op_qr_pdf import (
     AssociacaoOp,
+    ProcessamentoCancelado,
     RegistroQr,
     analisar_pasta,
     localizar_raiz_qr,
@@ -32,6 +33,7 @@ class Aplicativo(tk.Tk):
         self.configure(bg="#F3F5F7")
         self.associacoes: list[AssociacaoOp] = []
         self.ultima_saida: Path | None = None
+        self.cancelamento = threading.Event()
         self._configurar_estilo()
         self._criar_interface()
         self._carregar_preferencias()
@@ -92,6 +94,13 @@ class Aplicativo(tk.Tk):
             botoes, text="2. Gerar PDFs com QR", style="Acao.TButton", command=self.processar, state="disabled"
         )
         self.botao_processar.pack(side="left")
+        self.botao_cancelar = ttk.Button(
+            botoes,
+            text="Cancelar",
+            command=self.cancelar_processo,
+            state="disabled",
+        )
+        self.botao_cancelar.pack(side="left", padx=8)
         self.botao_abrir = ttk.Button(
             botoes, text="Abrir pasta de resultado", command=self.abrir_saida, state="disabled"
         )
@@ -172,6 +181,7 @@ class Aplicativo(tk.Tk):
         estado = "disabled" if valor else "normal"
         self.botao_analisar.configure(state=estado)
         self.botao_processar.configure(state="disabled" if valor else self._estado_processar())
+        self.botao_cancelar.configure(state="normal" if valor else "disabled")
         self.status.set(mensagem)
         if valor:
             if indeterminado:
@@ -190,12 +200,24 @@ class Aplicativo(tk.Tk):
         def executar():
             try:
                 resultado = funcao()
+            except ProcessamentoCancelado:
+                self.after(0, self._cancelado)
             except Exception as exc:
                 detalhes = traceback.format_exc()
                 self.after(0, lambda: self._erro(str(exc), detalhes))
             else:
                 self.after(0, lambda: sucesso(resultado))
         threading.Thread(target=executar, daemon=True).start()
+
+    def cancelar_processo(self):
+        self.cancelamento.set()
+        self.botao_cancelar.configure(state="disabled")
+        self.status.set("Cancelamento solicitado; finalizando a etapa atual com segurança...")
+
+    def _cancelado(self):
+        self._ocupado(False, "Processamento cancelado. Nenhum PDF parcial foi mantido.")
+        self.progresso.configure(value=0)
+        messagebox.showinfo("Processamento cancelado", "A operação foi cancelada com segurança.")
 
     def _erro(self, mensagem, detalhes):
         self._ocupado(False, "Falha. Revise a mensagem apresentada.")
@@ -217,6 +239,7 @@ class Aplicativo(tk.Tk):
             messagebox.showwarning("Sem PDFs", "Nenhum PDF foi encontrado na pasta das OPs.")
             return
         self._salvar_preferencias()
+        self.cancelamento.clear()
         self.progresso.configure(maximum=total_pdfs)
         self._ocupado(
             True,
@@ -224,7 +247,12 @@ class Aplicativo(tk.Tk):
             indeterminado=False,
         )
         self._em_thread(
-            lambda: analisar_pasta(ops, qrs, self._progresso_analise),
+            lambda: analisar_pasta(
+                ops,
+                qrs,
+                self._progresso_analise,
+                self.cancelamento.is_set,
+            ),
             self._analise_concluida,
         )
 
@@ -305,15 +333,41 @@ class Aplicativo(tk.Tk):
         ):
             return
         qrs = Path(self.pasta_qrs.get().strip())
-        self._ocupado(True, "Gerando PDFs e validando os resultados...")
+        self.cancelamento.clear()
+        self.progresso.configure(maximum=len(self.associacoes))
+        self._ocupado(
+            True,
+            f"Preparando {len(self.associacoes)} PDFs em pasta local...",
+            indeterminado=False,
+        )
         self._em_thread(
             lambda: processar_associacoes(
                 self.associacoes,
                 qrs,
                 substituir_originais=substituir,
                 permitir_reprocessar=self.reprocessar.get(),
+                progresso=self._progresso_processamento,
+                cancelar=self.cancelamento.is_set,
             ),
             self._processamento_concluido,
+        )
+
+    def _progresso_processamento(
+        self, fase: str, atual: int, total: int, arquivo: str
+    ):
+        rotulos = {
+            "gerando": "Gerando localmente",
+            "validando": "Validando resultado",
+            "backup": "Criando backup",
+            "salvando": "Salvando na pasta final",
+        }
+        rotulo = rotulos.get(fase, fase.capitalize())
+        self.after(
+            0,
+            lambda: (
+                self.progresso.configure(value=atual, maximum=total),
+                self.status.set(f"{rotulo} {atual} de {total}: {arquivo}"),
+            ),
         )
 
     def _processamento_concluido(self, resultado):

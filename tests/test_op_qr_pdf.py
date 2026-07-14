@@ -11,11 +11,13 @@ try:
     from core.op_qr_pdf import (
         AssociacaoOp,
         DadosOp,
+        ProcessamentoCancelado,
         RegistroQr,
         aplicar_qrs_pdf,
         associar_op,
         carregar_manifesto,
         localizar_raiz_qr,
+        processar_associacoes,
         validar_pdf_resultado,
         validar_qrs_associados,
     )
@@ -151,6 +153,71 @@ class OpQrPdfTests(unittest.TestCase):
             self.assertEqual(len(registros), 1)
             with self.assertRaises(FileNotFoundError):
                 validar_qrs_associados([associacao], raiz)
+
+    def test_processa_em_fases_e_salva_resultado(self):
+        with tempfile.TemporaryDirectory() as pasta_temp:
+            raiz = Path(pasta_temp)
+            origem = raiz / "ops" / "001.pdf"
+            origem.parent.mkdir()
+            qr = raiz / "qrs" / "000001.png"
+            qr.parent.mkdir()
+            Image.new("RGB", (120, 120), "black").save(qr)
+            (raiz / "manifesto_qr.json").write_text("[]", encoding="utf-8")
+            desenho = canvas.Canvas(str(origem), pagesize=(600, 800))
+            desenho.drawString(30, 760, "ORDEM DE PRODUCAO")
+            desenho.save()
+            registro = self.registro("000001", "Processo")
+            associacao = AssociacaoOp(
+                self.dados("Processo"), [registro], "ok", "Processo localizado"
+            )
+            associacao.dados.arquivo = origem
+            fases = []
+
+            destino, relatorio = processar_associacoes(
+                [associacao],
+                raiz,
+                pasta_saida=raiz / "resultado",
+                progresso=lambda fase, *_: fases.append(fase),
+            )
+
+            self.assertTrue((destino / "001.pdf").is_file())
+            self.assertTrue((destino / "RELATORIO_QR_OPS.json").is_file())
+            self.assertEqual(relatorio["pdfs"], 1)
+            self.assertEqual(fases, ["gerando", "validando", "salvando"])
+
+    def test_cancelamento_remove_resultado_parcial(self):
+        with tempfile.TemporaryDirectory() as pasta_temp:
+            raiz = Path(pasta_temp)
+            origem = raiz / "ops" / "001.pdf"
+            origem.parent.mkdir()
+            qr = raiz / "qrs" / "000001.png"
+            qr.parent.mkdir()
+            Image.new("RGB", (120, 120), "black").save(qr)
+            (raiz / "manifesto_qr.json").write_text("[]", encoding="utf-8")
+            desenho = canvas.Canvas(str(origem), pagesize=(600, 800))
+            desenho.drawString(30, 760, "ORDEM DE PRODUCAO")
+            desenho.save()
+            registro = self.registro("000001", "Processo")
+            associacao = AssociacaoOp(
+                self.dados("Processo"), [registro], "ok", "Processo localizado"
+            )
+            associacao.dados.arquivo = origem
+            estado = {"cancelar": False}
+
+            def progresso(fase, *_):
+                if fase == "gerando":
+                    estado["cancelar"] = True
+
+            with self.assertRaises(ProcessamentoCancelado):
+                processar_associacoes(
+                    [associacao],
+                    raiz,
+                    pasta_saida=raiz / "resultado",
+                    progresso=progresso,
+                    cancelar=lambda: estado["cancelar"],
+                )
+
+            self.assertFalse((raiz / "resultado").exists())
 
 
 if __name__ == "__main__":

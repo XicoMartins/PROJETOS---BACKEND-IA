@@ -45,6 +45,11 @@ pasta `base_completa` acima dela e corrige o caminho exibido.
 7. Clique em **2. Gerar PDFs com QR**.
 8. Use **Abrir pasta de resultado** para acessar os arquivos prontos.
 
+Durante o processamento, o rodapé informa separadamente as fases **Gerando
+localmente**, **Validando resultado**, **Criando backup** e **Salvando na pasta
+final**. O botão **Cancelar** interrompe a operação com segurança. Antes da cópia
+final, nenhum arquivo parcial é mantido na pasta das OPs.
+
 ## Saída segura
 
 Por padrão, o aplicativo cria uma pasta nova ao lado da pasta das OPs:
@@ -73,6 +78,12 @@ antes da substituição.
 Durante a análise, o manifesto é mantido em cache e os PDFs são lidos em paralelo.
 Os PNGs são verificados somente depois da associação e apenas para os processos que
 serão efetivamente inseridos, evitando percorrer toda a base pela rede.
+
+Na geração, até quatro PDFs são preparados e validados simultaneamente em uma pasta
+temporária local. Sobreposições de QR repetidas são reutilizadas em memória. Somente
+depois que todos os resultados passam nas validações os arquivos são transferidos
+para a pasta sincronizada. Se houver cancelamento ou erro durante a substituição dos
+originais, os PDFs já alterados são restaurados a partir do backup.
 
 ## Gerar novamente o executável
 

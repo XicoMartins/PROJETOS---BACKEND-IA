@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from difflib import SequenceMatcher
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable
 
@@ -53,6 +54,15 @@ class AssociacaoOp:
 
 
 _CACHE_MANIFESTO: dict[tuple[str, int, int], list[RegistroQr]] = {}
+
+
+class ProcessamentoCancelado(Exception):
+    """Interrupção solicitada pelo usuário sem caracterizar falha do processamento."""
+
+
+def _verificar_cancelamento(cancelar: Callable[[], bool] | None) -> None:
+    if cancelar and cancelar():
+        raise ProcessamentoCancelado("Processamento cancelado pelo usuário.")
 
 
 def normalizar(valor: object) -> str:
@@ -381,7 +391,9 @@ def analisar_pasta(
     pasta_ops: Path,
     raiz_qr: Path,
     progresso: Callable[[int, int, str], None] | None = None,
+    cancelar: Callable[[], bool] | None = None,
 ) -> list[AssociacaoOp]:
+    _verificar_cancelamento(cancelar)
     if not pasta_ops.is_dir():
         raise FileNotFoundError(f"Pasta de OPs não encontrada: {pasta_ops}")
     pdfs = sorted(
@@ -400,6 +412,7 @@ def analisar_pasta(
         }
         concluidos = 0
         for futuro in as_completed(futuros):
+            _verificar_cancelamento(cancelar)
             indice = futuros[futuro]
             dados[indice] = futuro.result()
             concluidos += 1
@@ -423,12 +436,14 @@ def _texto_curto(texto: str, limite: int = 28) -> str:
     return texto if len(texto) <= limite else texto[: limite - 3].rstrip() + "..."
 
 
-def _criar_sobreposicao(
+@lru_cache(maxsize=256)
+def _criar_sobreposicao_bytes(
     largura: float,
     altura: float,
-    registros: list[RegistroQr],
-    raiz_qr: Path,
-) -> PdfReader:
+    registros: tuple[RegistroQr, ...],
+    raiz_qr_texto: str,
+) -> bytes:
+    raiz_qr = Path(raiz_qr_texto)
     memoria = io.BytesIO()
     desenho = canvas.Canvas(memoria, pagesize=(largura, altura))
     x0, x1 = largura * 0.708, largura * 0.966
@@ -480,8 +495,22 @@ def _criar_sobreposicao(
                 _texto_curto(registro.processo),
             )
     desenho.save()
-    memoria.seek(0)
-    return PdfReader(memoria)
+    return memoria.getvalue()
+
+
+def _criar_sobreposicao(
+    largura: float,
+    altura: float,
+    registros: list[RegistroQr],
+    raiz_qr: Path,
+) -> PdfReader:
+    conteudo = _criar_sobreposicao_bytes(
+        largura,
+        altura,
+        tuple(registros),
+        str(raiz_qr),
+    )
+    return PdfReader(io.BytesIO(conteudo))
 
 
 def aplicar_qrs_pdf(
@@ -489,11 +518,14 @@ def aplicar_qrs_pdf(
     destino: Path,
     registros: list[RegistroQr],
     raiz_qr: Path,
+    cancelar: Callable[[], bool] | None = None,
 ) -> int:
+    _verificar_cancelamento(cancelar)
     if not registros:
         raise ValueError(f"{origem.name}: nenhum QR Code associado")
     escritor = PdfWriter(clone_from=origem)
     for pagina_original in escritor.pages:
+        _verificar_cancelamento(cancelar)
         if pagina_original.rotation:
             pagina_original.transfer_rotation_to_content()
         largura = float(pagina_original.mediabox.width)
@@ -513,7 +545,9 @@ def validar_pdf_resultado(
     original: Path,
     resultado: Path,
     registros: list[RegistroQr],
+    cancelar: Callable[[], bool] | None = None,
 ) -> None:
+    _verificar_cancelamento(cancelar)
     leitor_original = PdfReader(original)
     leitor_resultado = PdfReader(resultado)
     if len(leitor_original.pages) != len(leitor_resultado.pages):
@@ -522,6 +556,7 @@ def validar_pdf_resultado(
     for numero, (pagina_original, pagina_resultado) in enumerate(
         zip(leitor_original.pages, leitor_resultado.pages), start=1
     ):
+        _verificar_cancelamento(cancelar)
         tamanho_original = tuple(round(float(valor), 3) for valor in pagina_original.mediabox)
         tamanho_resultado = tuple(round(float(valor), 3) for valor in pagina_resultado.mediabox)
         if tamanho_original != tamanho_resultado:
@@ -534,13 +569,63 @@ def validar_pdf_resultado(
             )
 
 
+def _executar_fase_paralela(
+    associacoes: list[AssociacaoOp],
+    tarefa: Callable[[AssociacaoOp], object],
+    fase: str,
+    progresso: Callable[[str, int, int, str], None] | None,
+    cancelar: Callable[[], bool] | None,
+) -> list[object]:
+    resultados: list[object | None] = [None] * len(associacoes)
+    trabalhadores = min(4, len(associacoes))
+    with ThreadPoolExecutor(max_workers=trabalhadores) as executor:
+        futuros = {
+            executor.submit(tarefa, item): indice
+            for indice, item in enumerate(associacoes)
+        }
+        concluidos = 0
+        try:
+            for futuro in as_completed(futuros):
+                _verificar_cancelamento(cancelar)
+                indice = futuros[futuro]
+                resultados[indice] = futuro.result()
+                concluidos += 1
+                if progresso:
+                    progresso(
+                        fase,
+                        concluidos,
+                        len(associacoes),
+                        associacoes[indice].dados.arquivo.name,
+                    )
+        except Exception:
+            for futuro in futuros:
+                futuro.cancel()
+            raise
+    return [item for item in resultados if item is not None]
+
+
+def _copiar_atomico(origem: Path, destino: Path) -> None:
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    temporario = destino.with_name(f".{destino.name}.mtech.tmp")
+    try:
+        shutil.copy2(origem, temporario)
+        os.replace(temporario, destino)
+    finally:
+        temporario.unlink(missing_ok=True)
+
+
 def processar_associacoes(
     associacoes: list[AssociacaoOp],
     raiz_qr: Path,
     pasta_saida: Path | None = None,
     substituir_originais: bool = False,
     permitir_reprocessar: bool = False,
+    progresso: Callable[[str, int, int, str], None] | None = None,
+    cancelar: Callable[[], bool] | None = None,
 ) -> tuple[Path, dict]:
+    _verificar_cancelamento(cancelar)
+    if not associacoes:
+        raise ValueError("Nenhuma OP foi informada para processamento")
     raiz_qr = localizar_raiz_qr(raiz_qr)
     pendentes = [item for item in associacoes if item.status not in {"ok", "manual"}]
     if pendentes:
@@ -553,61 +638,117 @@ def processar_associacoes(
             f"{len(ja_processados)} PDFs já possuem IDs de QR; habilite o reprocessamento"
         )
     validar_qrs_associados(associacoes, raiz_qr)
+    _verificar_cancelamento(cancelar)
 
     pasta_ops = associacoes[0].dados.arquivo.parent
     instante = datetime.now().strftime("%Y%m%d_%H%M%S")
-    if substituir_originais:
-        backup = pasta_ops.parent / f"BACKUP_OPS_ANTES_QR_{instante}"
-        backup.mkdir(parents=True, exist_ok=False)
-        for item in associacoes:
-            shutil.copy2(item.dados.arquivo, backup / item.dados.arquivo.name)
-        destino_base = pasta_ops
-    else:
-        destino_base = pasta_saida or pasta_ops.parent / f"OPS_COM_QR_{instante}"
-        destino_base.mkdir(parents=True, exist_ok=True)
-        backup = None
+    destino_base = (
+        pasta_ops
+        if substituir_originais
+        else pasta_saida or pasta_ops.parent / f"OPS_COM_QR_{instante}"
+    )
+    backup = (
+        pasta_ops.parent / f"BACKUP_OPS_ANTES_QR_{instante}"
+        if substituir_originais
+        else None
+    )
 
-    relatorio_itens = []
     with tempfile.TemporaryDirectory(prefix="mtech_op_qr_") as temporario:
         temporario_path = Path(temporario)
-        preparados: list[tuple[Path, Path]] = []
-        for item in associacoes:
-            destino = destino_base / item.dados.arquivo.name
-            if substituir_originais:
-                intermediario = temporario_path / item.dados.arquivo.name
-                paginas = aplicar_qrs_pdf(
-                    item.dados.arquivo, intermediario, item.registros, raiz_qr
-                )
-                validar_pdf_resultado(
-                    item.dados.arquivo, intermediario, item.registros
-                )
-                preparados.append((intermediario, destino))
-            else:
-                paginas = aplicar_qrs_pdf(
-                    item.dados.arquivo, destino, item.registros, raiz_qr
-                )
-                validar_pdf_resultado(item.dados.arquivo, destino, item.registros)
-            relatorio_itens.append(
-                {
-                    "pdf": item.dados.arquivo.name,
-                    "produto": item.dados.produto,
-                    "operacao": item.dados.operacao,
-                    "paginas": paginas,
-                    "processos": [asdict(registro) for registro in item.registros],
-                }
+
+        def gerar(item: AssociacaoOp) -> int:
+            return aplicar_qrs_pdf(
+                item.dados.arquivo,
+                temporario_path / item.dados.arquivo.name,
+                item.registros,
+                raiz_qr,
+                cancelar,
             )
 
-        substituidos: list[Path] = []
+        paginas = _executar_fase_paralela(
+            associacoes, gerar, "gerando", progresso, cancelar
+        )
+
+        def validar(item: AssociacaoOp) -> bool:
+            validar_pdf_resultado(
+                item.dados.arquivo,
+                temporario_path / item.dados.arquivo.name,
+                item.registros,
+                cancelar,
+            )
+            return True
+
+        _executar_fase_paralela(
+            associacoes, validar, "validando", progresso, cancelar
+        )
+        _verificar_cancelamento(cancelar)
+
+        if not substituir_originais:
+            if destino_base.exists() and any(
+                (destino_base / item.dados.arquivo.name).exists()
+                for item in associacoes
+            ):
+                raise FileExistsError(
+                    f"A pasta de saída já contém PDFs com os mesmos nomes: {destino_base}"
+                )
+            destino_base.mkdir(parents=True, exist_ok=True)
+
+        copiados: list[Path] = []
+        backup_criado = False
         try:
-            for intermediario, destino in preparados:
-                os.replace(intermediario, destino)
-                substituidos.append(destino)
-        except Exception:
             if backup:
-                for destino in substituidos:
-                    shutil.copy2(backup / destino.name, destino)
+                backup.mkdir(parents=True, exist_ok=False)
+                backup_criado = True
+                for indice, item in enumerate(associacoes, start=1):
+                    _verificar_cancelamento(cancelar)
+                    _copiar_atomico(
+                        item.dados.arquivo, backup / item.dados.arquivo.name
+                    )
+                    if progresso:
+                        progresso(
+                            "backup",
+                            indice,
+                            len(associacoes),
+                            item.dados.arquivo.name,
+                        )
+
+            for indice, item in enumerate(associacoes, start=1):
+                _verificar_cancelamento(cancelar)
+                destino = destino_base / item.dados.arquivo.name
+                _copiar_atomico(
+                    temporario_path / item.dados.arquivo.name, destino
+                )
+                copiados.append(destino)
+                if progresso:
+                    progresso(
+                        "salvando",
+                        indice,
+                        len(associacoes),
+                        item.dados.arquivo.name,
+                    )
+        except Exception:
+            if backup_criado and backup and copiados:
+                for destino in copiados:
+                    _copiar_atomico(backup / destino.name, destino)
+            elif backup_criado and backup:
+                shutil.rmtree(backup, ignore_errors=True)
+            else:
+                for destino in copiados:
+                    destino.unlink(missing_ok=True)
+                if destino_base.exists() and not any(destino_base.iterdir()):
+                    destino_base.rmdir()
             raise
 
+    relatorio_itens = [
+        {
+            "pdf": item.dados.arquivo.name,
+            "produto": item.dados.produto,
+            "operacao": item.dados.operacao,
+            "paginas": paginas[indice],
+            "processos": [asdict(registro) for registro in item.registros],
+        }
+        for indice, item in enumerate(associacoes)
+    ]
     relatorio = {
         "data_hora": datetime.now().isoformat(timespec="seconds"),
         "pasta_ops": str(pasta_ops),
