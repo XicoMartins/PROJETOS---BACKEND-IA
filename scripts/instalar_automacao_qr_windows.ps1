@@ -38,8 +38,10 @@ if ($ExecutarSemLogin) {
         -Settings $Configuracoes -User $Usuario -Password $Senha -RunLevel Limited -Force | Out-Null
 } else {
     $Usuario = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $Principal = New-ScheduledTaskPrincipal -UserId $Usuario `
+        -LogonType Interactive -RunLevel Limited
     Register-ScheduledTask -TaskName $NomeTarefa -Action $Acao -Trigger $Gatilho `
-        -Settings $Configuracoes -User $Usuario -LogonType Interactive -RunLevel Limited -Force | Out-Null
+        -Settings $Configuracoes -Principal $Principal -Force | Out-Null
 }
 
 Write-Host "Tarefa instalada: $NomeTarefa"
