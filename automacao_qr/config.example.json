@@ -1,0 +1,24 @@
+{
+  "raiz_projeto": "..",
+  "pastas": {
+    "entrada_producao": "automacao_qr/entrada/producao",
+    "entrada_pintura": "automacao_qr/entrada/pintura",
+    "base_producao": "planilhas",
+    "base_pintura": "PINTURA",
+    "qrs": "qrcodes_processos/base_completa",
+    "processados": "automacao_qr/processados",
+    "rejeitados": "automacao_qr/rejeitados",
+    "backups": "automacao_qr/backups",
+    "logs": "automacao_qr/logs",
+    "estado": "%PROGRAMDATA%/MTECH/AutomacaoQR"
+  },
+  "qr": {
+    "modo": "id",
+    "url_base": null
+  },
+  "estabilidade_segundos": 10,
+  "github": {
+    "sincronizar": false,
+    "branch": "main"
+  }
+}

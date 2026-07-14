@@ -1,68 +1,127 @@
-# Automação de novas planilhas e QR Codes
+# Automação local de planilhas e QR Codes
 
-## Situação atual
+## O que foi mantido
 
-- A base possui IDs globais de seis dígitos.
-- IDs existentes nunca devem ser renumerados.
-- O gerador em lote cria um QR por processo e valida duplicidades entre planilhas.
+O analista continua criando a lista de processos no modelo Excel que já utiliza hoje.
+Não foi criado um modelo novo e não é necessário copiar os dados para outro formato.
 
-## Opção recomendada agora: serviço no Windows
+A automação apenas acrescenta a coluna `PROCESSO_ID` quando ela não existe, preenche
+os IDs vazios com a sequência global de seis dígitos e preserva as demais abas,
+fórmulas, valores e formatação do arquivo.
 
-Executar a automação em um único computador ou servidor que permaneça ligado e tenha
-acesso à unidade `S:`. O Agendador de Tarefas pode executar a verificação a cada minuto.
+## Fluxo
 
-Fluxo esperado:
+1. O analista salva uma **cópia fechada** da planilha em uma das pastas de entrada:
+   - `automacao_qr\entrada\producao`
+   - `automacao_qr\entrada\pintura`
+2. A tarefa do Windows executa uma verificação curta a cada minuto.
+3. O arquivo é validado sem alterar a base.
+4. Os próximos IDs globais são reservados no SQLite local.
+5. Uma cópia de segurança do arquivo recebido é criada.
+6. A planilha preenchida é publicada em `planilhas` ou `PINTURA`.
+7. Um QR PNG por processo é criado em `qrcodes_processos\base_completa`.
+8. O manifesto global é atualizado.
+9. O arquivo recebido vai para `automacao_qr\processados`.
+10. Se houver erro de conteúdo, o arquivo vai para `automacao_qr\rejeitados` junto
+    de um arquivo `.erro.txt` explicando o motivo.
 
-1. Detectar uma planilha nova na pasta `planilhas`.
-2. Ignorar arquivos temporários iniciados por `~$`.
-3. Aguardar o arquivo parar de mudar antes de abri-lo.
-4. Criar um backup.
-5. Validar `CLIENTE`, `ACABADO`, `FERRAMENTAL` e `PROCESSO`.
-6. Reservar os próximos IDs globais em uma transação.
-7. Preencher somente linhas sem `PROCESSO_ID`.
-8. Salvar primeiro em arquivo temporário e substituir o original somente após validar.
-9. Gerar os QR Codes novos e atualizar o manifesto.
-10. Registrar sucesso ou erro em log.
+Arquivos temporários do Excel (`~$...xlsx`) são ignorados. Se o arquivo ainda estiver
+sendo salvo, ele fica na entrada e é verificado novamente na próxima execução.
 
-Para impedir que dois computadores distribuam o mesmo ID, somente uma máquina deve
-executar esse serviço. A sequência deve ficar em SQLite ou no banco do sistema, com
-restrição `UNIQUE` para `PROCESSO_ID`; não deve depender somente do maior valor lido
-nas planilhas.
+## Segurança da sequência
 
-## Opção mais robusta: upload dentro do sistema
+- IDs existentes nunca são alterados ou reutilizados.
+- A sequência é global entre produção e pintura.
+- Antes de reservar novos números, toda a base é validada contra duplicidades.
+- A reserva usa uma transação SQLite e uma trava impede duas execuções simultâneas.
+- Se uma execução falhar após reservar números, pode haver um salto na sequência.
+  Isso é intencional: um ID reservado nunca é reaproveitado.
+- A planilha original da base não é substituída; uma nova lista com nome já existente
+  é rejeitada para evitar sobrescrita acidental.
 
-Criar uma tela administrativa **Importar planilha de processo**. O servidor valida o
-arquivo, reserva os IDs no banco, devolve a planilha preenchida e disponibiliza um ZIP
-com os QR Codes. Essa opção oferece histórico, permissões, mensagens de erro e evita
-depender de uma pasta monitorada.
+## Preparar a configuração local
 
-É a melhor alternativa quando a base passar a ser controlada principalmente pelo
-sistema, e não diretamente pelos arquivos Excel.
+Copie `automacao_qr\config.example.json` para
+`automacao_qr\config.local.json`. O arquivo local não entra no Git.
 
-## Opção integrada ao GitHub
+Na fase piloto, mantenha:
 
-Uma GitHub Action pode executar quando uma nova planilha for enviada para `planilhas/`.
-Ela valida a base, preenche os IDs, gera os QR Codes e cria um commit ou pull request.
+```json
+"github": {
+  "sincronizar": false,
+  "branch": "main"
+}
+```
 
-Essa opção funciona bem quando todas as planilhas entram pelo GitHub, mas não detecta
-um arquivo colocado apenas na unidade `S:` enquanto ele não for enviado ao repositório.
+Assim, a automação local gera os arquivos, mas não faz commit nem push sozinha.
 
-## Controles obrigatórios
+## Testar sem alterar nada
 
-- Não alterar IDs que já existem.
-- Validar IDs vazios, inválidos e duplicados globalmente.
-- Preservar códigos como texto e zeros à esquerda.
-- Ignorar arquivos `~$` do Excel.
-- Manter backup anterior a cada processamento.
-- Usar trava para impedir duas execuções simultâneas.
-- Registrar planilha, aba, linha, ID e data de criação.
-- Não substituir a planilha original se qualquer validação falhar.
-
-## Gerar novamente toda a coleção de QR Codes
+Coloque uma cópia de uma nova planilha na pasta de entrada e execute:
 
 ```powershell
-python scripts\gerar_qr_base.py `
-  --diretorio "planilhas" `
-  --saida "qrcodes_processos\base_completa" `
-  --modo id
+.\venv\Scripts\python.exe scripts\automacao_planilhas_qr.py `
+  --config automacao_qr\config.local.json `
+  --tipo producao
 ```
+
+Sem `--aplicar`, o programa apenas valida e informa quais IDs seriam usados.
+
+Para testar um arquivo específico sem colocá-lo na fila:
+
+```powershell
+.\venv\Scripts\python.exe scripts\automacao_planilhas_qr.py `
+  --config automacao_qr\config.local.json `
+  --tipo producao `
+  --arquivo "C:\caminho\LISTA DE PROCESSO TESTE.xlsx"
+```
+
+## Efetivar manualmente no piloto
+
+```powershell
+.\venv\Scripts\python.exe scripts\automacao_planilhas_qr.py `
+  --config automacao_qr\config.local.json `
+  --tipo producao `
+  --aplicar
+```
+
+Troque `producao` por `pintura` quando necessário.
+
+## Instalar no Agendador de Tarefas
+
+O instalador foi criado, mas não deve ser executado antes do teste piloto:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\instalar_automacao_qr_windows.ps1
+```
+
+No modo padrão, a tarefa usa a conta atual e funciona enquanto essa conta estiver
+conectada ao Windows. Para executar mesmo sem login, use:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\instalar_automacao_qr_windows.ps1 `
+  -ExecutarSemLogin
+```
+
+Nesse modo, informe uma conta que tenha acesso à pasta de rede. Para execução sem
+login, prefira caminhos UNC no `config.local.json`, pois a unidade `S:` pode não estar
+mapeada para a tarefa.
+
+## Publicação automática no GitHub
+
+Após o piloto local estar validado, `github.sincronizar` pode ser alterado para
+`true`. Nesse modo a automação:
+
+1. exige que o repositório esteja sem alterações pendentes;
+2. executa `git pull --ff-only` antes de processar;
+3. adiciona somente a nova planilha, seus QRs e o manifesto;
+4. cria um commit e envia para a branch configurada.
+
+Se o repositório estiver sujo ou o `pull` falhar, nenhuma planilha é processada.
+
+## Uso de recursos
+
+A tarefa não mantém um serviço Python residente. Ela abre, verifica a fila e encerra.
+Sem arquivo novo, o consumo dura poucos segundos por minuto. Excel não precisa ficar
+aberto. Com o computador desligado, a automação local não executa; a opção
+`StartWhenAvailable` faz o Windows rodar a verificação quando o computador voltar.

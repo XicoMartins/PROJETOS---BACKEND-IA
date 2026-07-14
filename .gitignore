@@ -43,3 +43,12 @@ db_backup_*.sqlite3
 .env
 .env.local
 secrets.toml
+
+# Arquivos locais e filas da automação de planilhas/QR Codes
+automacao_qr/config.local.json
+automacao_qr/entrada/**/*.xlsx
+automacao_qr/processados/
+automacao_qr/rejeitados/
+automacao_qr/backups/
+automacao_qr/logs/
+automacao_qr/estado/
