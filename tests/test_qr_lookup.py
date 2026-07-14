@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from core.excel_utils import get_process_by_id
-from core.qr_utils import extract_process_id, normalize_process_id
+from core.qr_utils import extract_process_id, is_painting_process, normalize_process_id
 
 
 class QrUtilsTests(unittest.TestCase):
@@ -23,6 +23,11 @@ class QrUtilsTests(unittest.TestCase):
             extract_process_id("https://formsmtech.streamlit.app/")
         with self.assertRaises(ValueError):
             normalize_process_id("1234567")
+
+    def test_identifies_painting_process(self):
+        self.assertTrue(is_painting_process({"ferramental": " pintura "}))
+        self.assertFalse(is_painting_process({"ferramental": "Solda MIG"}))
+        self.assertFalse(is_painting_process(None))
 
 
 class ProcessLookupTests(unittest.TestCase):

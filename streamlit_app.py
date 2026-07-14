@@ -32,7 +32,7 @@ from core.excel_utils import (
     get_unique_choices,
     get_operadores,
 )
-from core.qr_utils import extract_process_id
+from core.qr_utils import extract_process_id, is_painting_process
 from core.qr_video import QRVideoProcessor
 
 st.set_page_config(
@@ -66,6 +66,12 @@ QR_INPUT_RESET_REQUESTED_KEY = "qr_input_reset_requested"
 QR_FOCUS_REQUESTED_KEY = "qr_focus_requested"
 QR_LAST_QUERY_KEY = "qr_last_query"
 QR_VIDEO_STOP_REQUESTED_KEY = "qr_video_stop_requested"
+PAINTING_QR_INPUT_KEY = "painting_qr_process_input"
+PAINTING_QR_CONTEXT_KEY = "painting_qr_process_context"
+PAINTING_QR_ERROR_KEY = "painting_qr_process_error"
+PAINTING_QR_INPUT_RESET_REQUESTED_KEY = "painting_qr_input_reset_requested"
+PAINTING_QR_FOCUS_REQUESTED_KEY = "painting_qr_focus_requested"
+PAINTING_QR_VIDEO_STOP_REQUESTED_KEY = "painting_qr_video_stop_requested"
 PAINTING_FORM_VERSION_KEY = "painting_form_version"
 PAINTING_FORM_FIELD_PREFIX = "painting_form_field__"
 PAINTING_SAVE_SUCCESS_MESSAGE_KEY = "painting_save_success_message"
@@ -420,6 +426,8 @@ if FORM_VERSION_KEY not in st.session_state:
     st.session_state[FORM_VERSION_KEY] = 0
 if QR_FOCUS_REQUESTED_KEY not in st.session_state:
     st.session_state[QR_FOCUS_REQUESTED_KEY] = True
+if PAINTING_QR_FOCUS_REQUESTED_KEY not in st.session_state:
+    st.session_state[PAINTING_QR_FOCUS_REQUESTED_KEY] = False
 if PAINTING_FORM_VERSION_KEY not in st.session_state:
     st.session_state[PAINTING_FORM_VERSION_KEY] = 0
 
@@ -453,6 +461,8 @@ def load_qr_process(raw_value) -> None:
         process_data = get_process_by_id(processo_id)
         if process_data is None:
             raise ValueError(f"PROCESSO_ID não encontrado: {processo_id}")
+        if is_painting_process(process_data):
+            raise ValueError("Este QR Code pertence aos lançamentos de pintura.")
     except (OSError, ValueError) as exc:
         st.session_state.pop(QR_CONTEXT_KEY, None)
         st.session_state[QR_ERROR_KEY] = str(exc)
@@ -472,6 +482,34 @@ def handle_qr_scan() -> None:
     load_qr_process(st.session_state.get(QR_INPUT_KEY, ""))
 
 
+def load_painting_qr_process(raw_value) -> None:
+    """Resolve um QR de pintura e guarda apenas os dados atuais da base."""
+    try:
+        processo_id = extract_process_id(raw_value)
+        process_data = get_process_by_id(processo_id)
+        if process_data is None:
+            raise ValueError(f"PROCESSO_ID não encontrado: {processo_id}")
+        if not is_painting_process(process_data):
+            raise ValueError("Este QR Code não pertence aos lançamentos de pintura.")
+    except (OSError, ValueError) as exc:
+        st.session_state.pop(PAINTING_QR_CONTEXT_KEY, None)
+        st.session_state[PAINTING_QR_ERROR_KEY] = str(exc)
+        st.session_state[PAINTING_QR_FOCUS_REQUESTED_KEY] = True
+    else:
+        st.session_state[PAINTING_QR_CONTEXT_KEY] = process_data
+        st.session_state.pop(PAINTING_QR_ERROR_KEY, None)
+        for field in ("cliente", "display", "ferramental", "processo"):
+            st.session_state.pop(painting_form_key(field), None)
+        st.session_state.last_painting_cliente = None
+        st.session_state.last_painting_display = None
+    finally:
+        st.session_state[PAINTING_QR_INPUT_RESET_REQUESTED_KEY] = True
+
+
+def handle_painting_qr_scan() -> None:
+    load_painting_qr_process(st.session_state.get(PAINTING_QR_INPUT_KEY, ""))
+
+
 def load_qr_query_param() -> None:
     query_value = st.query_params.get("processo_id")
     if isinstance(query_value, list):
@@ -483,10 +521,20 @@ def load_qr_query_param() -> None:
     if st.session_state.get(QR_LAST_QUERY_KEY) == marker:
         return
     st.session_state[QR_LAST_QUERY_KEY] = marker
-    load_qr_process(marker)
+    try:
+        processo_id = extract_process_id(marker)
+        process_data = get_process_by_id(processo_id)
+    except (OSError, ValueError):
+        load_qr_process(marker)
+        return
+
+    if is_painting_process(process_data):
+        load_painting_qr_process(marker)
+    else:
+        load_qr_process(marker)
 
 
-def configure_qr_input(should_focus: bool) -> None:
+def configure_qr_input(should_focus: bool, input_label: str) -> None:
     """Devolve o foco ao leitor depois de abrir ou limpar o formulário."""
     focus_value = "true" if should_focus else "false"
     st.iframe(
@@ -494,7 +542,7 @@ def configure_qr_input(should_focus: bool) -> None:
         <script>
         setTimeout(() => {{
             const input = window.parent.document.querySelector(
-                'input[aria-label="Ler QR Code ou informar ID do processo"]'
+                'input[aria-label="{input_label}"]'
             );
             if (input) {{
                 if (input.dataset.qrEnterBlurBoundV2 !== 'true') {{
@@ -521,9 +569,14 @@ def configure_qr_input(should_focus: bool) -> None:
     )
 
 
-def render_qr_video_reader() -> None:
+def render_qr_video_reader(
+    *,
+    component_key: str,
+    stop_requested_key: str,
+    on_detect,
+) -> None:
     """Mostra a camera continua e envia a leitura para o fluxo QR existente."""
-    stop_requested = st.session_state.pop(QR_VIDEO_STOP_REQUESTED_KEY, False)
+    stop_requested = st.session_state.pop(stop_requested_key, False)
 
     with st.expander("Ler QR Code pela camera do celular"):
         st.caption(
@@ -532,7 +585,7 @@ def render_qr_video_reader() -> None:
         )
 
         context = webrtc_streamer(
-            key="qr-video-reader",
+            key=component_key,
             video_processor_factory=QRVideoProcessor,
             media_stream_constraints={
                 "video": {
@@ -565,8 +618,8 @@ def render_qr_video_reader() -> None:
 
             value = processor.pop_detected_value()
             if value:
-                st.session_state[QR_VIDEO_STOP_REQUESTED_KEY] = True
-                load_qr_process(value)
+                st.session_state[stop_requested_key] = True
+                on_detect(value)
                 st.rerun()
 
             if context.state.playing:
@@ -581,6 +634,11 @@ def reset_painting_form_fields():
     st.session_state[PAINTING_FORM_VERSION_KEY] += 1
     st.session_state.last_painting_cliente = None
     st.session_state.last_painting_display = None
+    st.session_state.pop(PAINTING_QR_CONTEXT_KEY, None)
+    st.session_state.pop(PAINTING_QR_ERROR_KEY, None)
+    st.session_state.pop(PAINTING_QR_INPUT_KEY, None)
+    st.session_state.pop(PAINTING_QR_INPUT_RESET_REQUESTED_KEY, None)
+    st.session_state[PAINTING_QR_FOCUS_REQUESTED_KEY] = True
 
 def painting_form_key(name: str) -> str:
     return f"{PAINTING_FORM_FIELD_PREFIX}{st.session_state[PAINTING_FORM_VERSION_KEY]}__{name}"
@@ -606,7 +664,7 @@ def render_lancamento_screen():
         on_change=handle_qr_scan,
     )
     st.caption("O leitor USB pode enviar somente o ID ou a URL completa do processo.")
-    configure_qr_input(should_focus_qr)
+    configure_qr_input(should_focus_qr, "Ler QR Code ou informar ID do processo")
 
     qr_error = st.session_state.get(QR_ERROR_KEY)
     if qr_error:
@@ -614,7 +672,11 @@ def render_lancamento_screen():
 
     qr_process = st.session_state.get(QR_CONTEXT_KEY)
     if qr_process is None:
-        render_qr_video_reader()
+        render_qr_video_reader(
+            component_key="qr-video-reader",
+            stop_requested_key=QR_VIDEO_STOP_REQUESTED_KEY,
+            on_detect=load_qr_process,
+        )
 
     cliente_key = form_key("cliente")
     acabado_key = form_key("acabado")
@@ -751,39 +813,92 @@ def render_lancamento_screen():
 def render_lancamento_pintura_screen():
     if st.session_state.pop(PAINTING_RESET_FORM_REQUESTED_KEY, False):
         reset_painting_form_fields()
+    if st.session_state.pop(PAINTING_QR_INPUT_RESET_REQUESTED_KEY, False):
+        st.session_state[PAINTING_QR_INPUT_KEY] = ""
 
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Lançamentos pintura</div>', unsafe_allow_html=True)
     success_message = st.session_state.pop(PAINTING_SAVE_SUCCESS_MESSAGE_KEY, None)
+    should_focus_qr = st.session_state.pop(PAINTING_QR_FOCUS_REQUESTED_KEY, False)
+    painting_qr_label = "Ler QR Code de pintura ou informar ID do processo"
 
-    cliente = st.selectbox(
-        "Cliente", get_painting_choices("CLIENTE"), index=None,
-        key=painting_form_key("cliente"),
+    st.text_input(
+        painting_qr_label,
+        key=PAINTING_QR_INPUT_KEY,
+        placeholder="Ex.: 001123",
+        on_change=handle_painting_qr_scan,
     )
-    if st.session_state.last_painting_cliente != cliente:
-        for field in ("display", "ferramental", "processo"):
-            st.session_state.pop(painting_form_key(field), None)
-    st.session_state.last_painting_cliente = cliente
-    display = st.selectbox(
-        "Display", get_painting_choices("ACABADO", CLIENTE=cliente), index=None,
-        key=painting_form_key("display"),
-    )
-    if st.session_state.last_painting_display != display:
-        for field in ("ferramental", "processo"):
-            st.session_state.pop(painting_form_key(field), None)
-    st.session_state.last_painting_display = display
+    st.caption("O leitor USB pode enviar somente o ID ou a URL completa do processo.")
+    configure_qr_input(should_focus_qr, painting_qr_label)
+
+    painting_qr_error = st.session_state.get(PAINTING_QR_ERROR_KEY)
+    if painting_qr_error:
+        st.error(painting_qr_error)
+
+    painting_qr_process = st.session_state.get(PAINTING_QR_CONTEXT_KEY)
+    if painting_qr_process is None:
+        render_qr_video_reader(
+            component_key="painting-qr-video-reader",
+            stop_requested_key=PAINTING_QR_VIDEO_STOP_REQUESTED_KEY,
+            on_detect=load_painting_qr_process,
+        )
+
+    if painting_qr_process:
+        st.success(
+            f"Processo {painting_qr_process['processo_id']} identificado pelo QR Code."
+        )
+        with st.container(border=True):
+            left_column, right_column = st.columns(2)
+            with left_column:
+                st.markdown(f"**Cliente:** {painting_qr_process['cliente']}")
+                st.markdown(f"**Display:** {painting_qr_process['acabado']}")
+            with right_column:
+                st.markdown(f"**Ferramental:** {painting_qr_process['ferramental']}")
+                st.markdown(f"**Processo:** {painting_qr_process['processo']}")
+
+        if st.button(
+            "Alterar dados manualmente",
+            key=painting_form_key("use_manual_data"),
+        ):
+            st.session_state.pop(PAINTING_QR_CONTEXT_KEY, None)
+            st.session_state.pop(PAINTING_QR_ERROR_KEY, None)
+            st.session_state[PAINTING_QR_INPUT_RESET_REQUESTED_KEY] = True
+            st.rerun()
+
+        cliente = painting_qr_process["cliente"]
+        display = painting_qr_process["acabado"]
+        ferramental = painting_qr_process["ferramental"]
+        processo = painting_qr_process["processo"]
+    else:
+        cliente = st.selectbox(
+            "Cliente", get_painting_choices("CLIENTE"), index=None,
+            key=painting_form_key("cliente"),
+        )
+        if st.session_state.last_painting_cliente != cliente:
+            for field in ("display", "ferramental", "processo"):
+                st.session_state.pop(painting_form_key(field), None)
+        st.session_state.last_painting_cliente = cliente
+        display = st.selectbox(
+            "Display", get_painting_choices("ACABADO", CLIENTE=cliente), index=None,
+            key=painting_form_key("display"),
+        )
+        if st.session_state.last_painting_display != display:
+            for field in ("ferramental", "processo"):
+                st.session_state.pop(painting_form_key(field), None)
+        st.session_state.last_painting_display = display
+        ferramental = st.selectbox(
+            "Ferramental", get_painting_choices("FERRAMENTAL", CLIENTE=cliente, ACABADO=display),
+            index=None, key=painting_form_key("ferramental"),
+        )
+        processo = st.selectbox(
+            "Processo", get_painting_process_choices(cliente, display, ferramental), index=None,
+            key=painting_form_key("processo"),
+        )
+
     numero_display = st.text_input(
         "Codigo (8 digitos)", max_chars=8, key=painting_form_key("numero_display"),
     )
     codigo_pintura = st.text_input("Código pintura", key=painting_form_key("codigo_pintura"))
-    ferramental = st.selectbox(
-        "Ferramental", get_painting_choices("FERRAMENTAL", CLIENTE=cliente, ACABADO=display),
-        index=None, key=painting_form_key("ferramental"),
-    )
-    processo = st.selectbox(
-        "Processo", get_painting_process_choices(cliente, display, ferramental), index=None,
-        key=painting_form_key("processo"),
-    )
     data_producao = st.date_input(
         "Data", value=date.today(), format="DD/MM/YYYY", key=painting_form_key("data_producao"),
     )
@@ -797,12 +912,33 @@ def render_lancamento_pintura_screen():
 
     save_col, success_col = st.columns([1, 8])
     with save_col:
-        salvar = st.button("Salvar", key="save_painting_entry")
+        salvar = st.button("Salvar e ler próximo", key="save_painting_entry")
     with success_col:
         if success_message:
             st.success(success_message)
 
     if salvar:
+        if painting_qr_process:
+            try:
+                refreshed_process = get_process_by_id(
+                    painting_qr_process["processo_id"]
+                )
+                if refreshed_process is None:
+                    raise ValueError(
+                        f"PROCESSO_ID não encontrado: "
+                        f"{painting_qr_process['processo_id']}"
+                    )
+                if not is_painting_process(refreshed_process):
+                    raise ValueError("O processo não pertence à base de pintura.")
+            except (OSError, ValueError) as exc:
+                st.error(f"Não foi possível validar novamente o QR: {exc}")
+                st.stop()
+
+            cliente = refreshed_process["cliente"]
+            display = refreshed_process["acabado"]
+            ferramental = refreshed_process["ferramental"]
+            processo = refreshed_process["processo"]
+
         obrigatorios = [
             (cliente, "Cliente"), (display, "Display"), (numero_display, "Codigo"),
             (codigo_pintura, "Código pintura"), (ferramental, "Ferramental"), (processo, "Processo"),

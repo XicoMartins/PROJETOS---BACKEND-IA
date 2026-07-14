@@ -46,3 +46,10 @@ def extract_process_id(value: object) -> str:
     if len(values) != 1 or not values[0].strip():
         raise ValueError("A URL do QR deve possuir um único parâmetro processo_id.")
     return normalize_process_id(values[0])
+
+
+def is_painting_process(process_data: object) -> bool:
+    """Indica se os dados consultados pertencem à base de pintura."""
+    if not isinstance(process_data, dict):
+        return False
+    return str(process_data.get("ferramental") or "").strip().upper() == "PINTURA"
