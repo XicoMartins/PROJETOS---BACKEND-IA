@@ -714,7 +714,12 @@ def executar(
     if not destinos:
         raise ValueError(f"tipo inválido: {tipo}")
 
-    if aplicar and config.sincronizar_github:
+    ha_arquivo_na_fila = arquivo_especifico is not None or any(
+        arquivo.is_file() and not arquivo.name.startswith("~$")
+        for destino in destinos
+        for arquivo in destino.entrada.glob("*.xlsx")
+    )
+    if aplicar and config.sincronizar_github and ha_arquivo_na_fila:
         validar_git_limpo(config)
 
     resultados: list[Resultado] = []

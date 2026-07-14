@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
@@ -158,6 +159,22 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         self.assertTrue(list(self.config.pasta_rejeitados.rglob("ID REPETIDO.xlsx")))
         erros = list(self.config.pasta_rejeitados.rglob("*.erro.txt"))
         self.assertIn("já usado", erros[0].read_text(encoding="utf-8"))
+
+    def test_fila_vazia_nao_consulta_github(self):
+        config_github = Configuracao(
+            **{
+                **self.config.__dict__,
+                "sincronizar_github": True,
+            }
+        )
+
+        with patch(
+            "scripts.automacao_planilhas_qr.validar_git_limpo"
+        ) as validar_git:
+            resultados = executar(config_github, aplicar=True, tipo="producao")
+
+        self.assertEqual(resultados, [])
+        validar_git.assert_not_called()
 
 
 if __name__ == "__main__":
