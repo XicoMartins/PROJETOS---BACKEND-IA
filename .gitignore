@@ -9,6 +9,8 @@ ENV/
 build/
 develop-eggs/
 dist/
+!components/qr_scanner/dist/
+!components/qr_scanner/dist/scanner.js
 downloads/
 eggs/
 .eggs/
@@ -40,6 +42,7 @@ db_backup_*.sqlite3
 .vscode/
 .idea/
 *.iml
+node_modules/
 .env
 .env.local
 secrets.toml

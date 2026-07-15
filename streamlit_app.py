@@ -33,6 +33,7 @@ from core.excel_utils import (
     get_operadores,
 )
 from core.qr_utils import extract_process_id, is_painting_process
+from core.qr_browser import qr_browser_scanner
 from core.qr_video import QRVideoProcessor
 
 st.set_page_config(
@@ -569,6 +570,19 @@ def configure_qr_input(should_focus: bool, input_label: str) -> None:
     )
 
 
+def render_qr_browser_reader(*, component_key: str, on_detect) -> None:
+    """Lê o QR no navegador e envia somente o texto decodificado ao backend."""
+    with st.expander("Ler QR Code pela câmera do celular"):
+        st.caption(
+            "A leitura acontece neste aparelho. Nenhuma imagem ou transmissão "
+            "de vídeo é enviada ao servidor."
+        )
+        value = qr_browser_scanner(key=component_key)
+        if value:
+            on_detect(value)
+            st.rerun()
+
+
 def render_qr_video_reader(
     *,
     component_key: str,
@@ -578,10 +592,10 @@ def render_qr_video_reader(
     """Mostra a camera continua e envia a leitura para o fluxo QR existente."""
     stop_requested = st.session_state.pop(stop_requested_key, False)
 
-    with st.expander("Ler QR Code pela camera do celular"):
+    with st.expander("Leitor alternativo por transmissão de vídeo"):
         st.caption(
-            "Toque em Iniciar camera, autorize o acesso e aponte a camera "
-            "traseira para um unico QR Code. A leitura para automaticamente."
+            "Use esta opção somente se o leitor principal não funcionar. "
+            "Ela depende da conexão WebRTC da rede."
         )
 
         context = webrtc_streamer(
@@ -672,6 +686,10 @@ def render_lancamento_screen():
 
     qr_process = st.session_state.get(QR_CONTEXT_KEY)
     if qr_process is None:
+        render_qr_browser_reader(
+            component_key="qr-browser-reader",
+            on_detect=load_qr_process,
+        )
         render_qr_video_reader(
             component_key="qr-video-reader",
             stop_requested_key=QR_VIDEO_STOP_REQUESTED_KEY,
@@ -837,6 +855,10 @@ def render_lancamento_pintura_screen():
 
     painting_qr_process = st.session_state.get(PAINTING_QR_CONTEXT_KEY)
     if painting_qr_process is None:
+        render_qr_browser_reader(
+            component_key="painting-qr-browser-reader",
+            on_detect=load_painting_qr_process,
+        )
         render_qr_video_reader(
             component_key="painting-qr-video-reader",
             stop_requested_key=PAINTING_QR_VIDEO_STOP_REQUESTED_KEY,

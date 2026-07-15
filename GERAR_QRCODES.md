@@ -68,6 +68,34 @@ https://formsmtech.streamlit.app/?processo_id=000001
 
 O botão **Alterar dados manualmente** preserva o funcionamento anterior para exceções.
 
+## Ler pela câmera do celular
+
+Nas telas de lançamento de produção e pintura, abra **Ler QR Code pela câmera do celular** e toque em **Iniciar câmera**. A leitura é contínua enquanto a câmera estiver aberta e para automaticamente assim que um QR Code válido for identificado.
+
+O vídeo é analisado diretamente no navegador do celular: somente o conteúdo decodificado do QR Code é enviado ao Streamlit. Por isso, o leitor principal não depende de transmissão WebRTC nem de configuração STUN/TURN. O acesso à câmera exige HTTPS e a permissão do usuário no navegador.
+
+As opções anteriores continuam disponíveis:
+
+- leitor QR USB ou digitação manual no campo de identificação;
+- QR contendo apenas o `PROCESSO_ID` ou uma URL completa;
+- **Leitor alternativo por transmissão de vídeo**, mantido temporariamente como contingência.
+
+Caso o navegador não encontre a câmera, confira a permissão de câmera do site e teste novamente pelo Safari ou Chrome atualizado.
+
+## Atualizar o componente da câmera
+
+O arquivo compilado do leitor já faz parte do repositório e não precisa ser gerado durante a publicação do Streamlit. Somente ao alterar `components/qr_scanner/src/scanner.js`, instale as dependências e recompile:
+
+```powershell
+cd components\qr_scanner
+pnpm install --store-dir "$env:LOCALAPPDATA\Temp\mtech-pnpm-store" --config.node-linker=hoisted
+pnpm run build
+```
+
+O `store-dir` local evita a criação de links simbólicos incompatíveis com a unidade de rede `S:`.
+
+Depois, versione também `components/qr_scanner/dist/scanner.js`.
+
 ## Gerar os QR Codes de toda a base
 
 Para processar todas as planilhas da pasta `planilhas` em uma única execução:
