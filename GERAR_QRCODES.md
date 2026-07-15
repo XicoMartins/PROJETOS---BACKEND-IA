@@ -72,13 +72,12 @@ O botão **Alterar dados manualmente** preserva o funcionamento anterior para ex
 
 Nas telas de lançamento de produção e pintura, abra **Ler QR Code pela câmera do celular** e toque em **Iniciar câmera**. A leitura é contínua enquanto a câmera estiver aberta e para automaticamente assim que um QR Code válido for identificado.
 
-O vídeo é analisado diretamente no navegador do celular: somente o conteúdo decodificado do QR Code é enviado ao Streamlit. Por isso, o leitor principal não depende de transmissão WebRTC nem de configuração STUN/TURN. O acesso à câmera exige HTTPS e a permissão do usuário no navegador.
+O vídeo é analisado diretamente no navegador do celular: somente o conteúdo decodificado do QR Code é enviado ao Streamlit. A leitura não depende de transmissão WebRTC nem de configuração STUN/TURN. O acesso à câmera exige HTTPS e a permissão do usuário no navegador.
 
 As opções anteriores continuam disponíveis:
 
 - leitor QR USB ou digitação manual no campo de identificação;
-- QR contendo apenas o `PROCESSO_ID` ou uma URL completa;
-- **Leitor alternativo por transmissão de vídeo**, mantido temporariamente como contingência.
+- QR contendo apenas o `PROCESSO_ID` ou uma URL completa.
 
 Caso o navegador não encontre a câmera, confira a permissão de câmera do site e teste novamente pelo Safari ou Chrome atualizado.
 

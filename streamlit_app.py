@@ -14,7 +14,6 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer
 
 from core.db_utils import (
     build_entry_update_payload_from_streamlit,
@@ -34,7 +33,6 @@ from core.excel_utils import (
 )
 from core.qr_utils import extract_process_id, is_painting_process
 from core.qr_browser import qr_browser_scanner
-from core.qr_video import QRVideoProcessor
 
 st.set_page_config(
     page_title="Registro de Producao",
@@ -66,13 +64,11 @@ QR_ERROR_KEY = "qr_process_error"
 QR_INPUT_RESET_REQUESTED_KEY = "qr_input_reset_requested"
 QR_FOCUS_REQUESTED_KEY = "qr_focus_requested"
 QR_LAST_QUERY_KEY = "qr_last_query"
-QR_VIDEO_STOP_REQUESTED_KEY = "qr_video_stop_requested"
 PAINTING_QR_INPUT_KEY = "painting_qr_process_input"
 PAINTING_QR_CONTEXT_KEY = "painting_qr_process_context"
 PAINTING_QR_ERROR_KEY = "painting_qr_process_error"
 PAINTING_QR_INPUT_RESET_REQUESTED_KEY = "painting_qr_input_reset_requested"
 PAINTING_QR_FOCUS_REQUESTED_KEY = "painting_qr_focus_requested"
-PAINTING_QR_VIDEO_STOP_REQUESTED_KEY = "painting_qr_video_stop_requested"
 PAINTING_FORM_VERSION_KEY = "painting_form_version"
 PAINTING_FORM_FIELD_PREFIX = "painting_form_field__"
 PAINTING_SAVE_SUCCESS_MESSAGE_KEY = "painting_save_success_message"
@@ -583,64 +579,6 @@ def render_qr_browser_reader(*, component_key: str, on_detect) -> None:
             st.rerun()
 
 
-def render_qr_video_reader(
-    *,
-    component_key: str,
-    stop_requested_key: str,
-    on_detect,
-) -> None:
-    """Mostra a camera continua e envia a leitura para o fluxo QR existente."""
-    stop_requested = st.session_state.pop(stop_requested_key, False)
-
-    with st.expander("Leitor alternativo por transmissão de vídeo"):
-        st.caption(
-            "Use esta opção somente se o leitor principal não funcionar. "
-            "Ela depende da conexão WebRTC da rede."
-        )
-
-        context = webrtc_streamer(
-            key=component_key,
-            video_processor_factory=QRVideoProcessor,
-            media_stream_constraints={
-                "video": {
-                    "facingMode": {"ideal": "environment"},
-                    "width": {"ideal": 1280},
-                    "height": {"ideal": 720},
-                },
-                "audio": False,
-            },
-            rtc_configuration={
-                "iceServers": [
-                    {"urls": "stun:stun.l.google.com:19302"},
-                ]
-            },
-            desired_playing_state=False if stop_requested else None,
-            async_processing=True,
-            translations={
-                "start": "Iniciar camera",
-                "stop": "Parar camera",
-            },
-        )
-
-        @st.fragment(run_every=0.3 if context.state.playing else None)
-        def poll_qr_video() -> None:
-            processor = context.video_processor
-            if processor is None:
-                if context.state.playing:
-                    st.caption("Iniciando a leitura do video...")
-                return
-
-            value = processor.pop_detected_value()
-            if value:
-                st.session_state[stop_requested_key] = True
-                on_detect(value)
-                st.rerun()
-
-            if context.state.playing:
-                st.caption("Camera ativa: procurando QR Code...")
-
-        poll_qr_video()
-
 def reset_painting_form_fields():
     for key in list(st.session_state.keys()):
         if isinstance(key, str) and key.startswith(PAINTING_FORM_FIELD_PREFIX):
@@ -688,11 +626,6 @@ def render_lancamento_screen():
     if qr_process is None:
         render_qr_browser_reader(
             component_key="qr-browser-reader",
-            on_detect=load_qr_process,
-        )
-        render_qr_video_reader(
-            component_key="qr-video-reader",
-            stop_requested_key=QR_VIDEO_STOP_REQUESTED_KEY,
             on_detect=load_qr_process,
         )
 
@@ -857,11 +790,6 @@ def render_lancamento_pintura_screen():
     if painting_qr_process is None:
         render_qr_browser_reader(
             component_key="painting-qr-browser-reader",
-            on_detect=load_painting_qr_process,
-        )
-        render_qr_video_reader(
-            component_key="painting-qr-video-reader",
-            stop_requested_key=PAINTING_QR_VIDEO_STOP_REQUESTED_KEY,
             on_detect=load_painting_qr_process,
         )
 

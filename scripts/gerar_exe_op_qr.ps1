@@ -40,7 +40,6 @@ try {
         --exclude-module openpyxl `
         --exclude-module matplotlib `
         --exclude-module scipy `
-        --exclude-module cv2 `
         --exclude-module streamlit `
         "apps\op_qr_app.py"
     if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar o executável" }

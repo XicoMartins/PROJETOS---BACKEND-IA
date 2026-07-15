@@ -4,5 +4,3 @@ openpyxl>=3.1
 python-dotenv>=1.0
 psycopg[binary]>=3.1
 qrcode[pil]>=8.0
-opencv-python-headless>=4.10,<5
-streamlit-webrtc>=0.64,<1
