@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
-from core.time_input import COMPONENT_DIR, extract_changed_value
+from core.time_input import COMPONENT_DIR, extract_changed_value, safe_component_key
 
 
 class TimeInputTests(unittest.TestCase):
@@ -21,6 +21,13 @@ class TimeInputTests(unittest.TestCase):
     def test_component_assets_exist(self):
         for filename in ("time_input.html", "time_input.css", "time_input.js"):
             self.assertTrue((COMPONENT_DIR / filename).is_file(), filename)
+
+    def test_component_key_does_not_use_streamlit_event_separator(self):
+        key = safe_component_key("form_field__0__hora_iniciada_hhmm")
+
+        self.assertNotIn("__", key)
+        self.assertEqual(key, safe_component_key("form_field__0__hora_iniciada_hhmm"))
+        self.assertNotEqual(key, safe_component_key("form_field__0__hora_finalizada_hhmm"))
 
 
 if __name__ == "__main__":

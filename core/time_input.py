@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import hashlib
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -35,12 +36,18 @@ def extract_changed_value(result: Any) -> str | None:
     return str(payload).strip()
 
 
+def safe_component_key(key: str) -> str:
+    """Cria uma chave estável sem o separador ``__`` reservado pelo Streamlit."""
+    digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:20]
+    return f"hhmm-{digest}"
+
+
 def time_hhmm_component(*, label: str, value: str, key: str) -> str:
     """Renderiza o campo e mantém a última confirmação na sessão."""
     value_key = f"{key}__confirmed_value"
     current = str(st.session_state.get(value_key, value))
     result = _component_renderer()(
-        key=key,
+        key=safe_component_key(key),
         data={"label": label, "value": current, "key": key},
         on_changed_change=lambda: None,
     )
