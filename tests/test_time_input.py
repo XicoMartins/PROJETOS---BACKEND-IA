@@ -22,6 +22,10 @@ class TimeInputTests(unittest.TestCase):
         for filename in ("time_input.html", "time_input.css", "time_input.js"):
             self.assertTrue((COMPONENT_DIR / filename).is_file(), filename)
 
+        html = (COMPONENT_DIR / "time_input.html").read_text(encoding="utf-8")
+        self.assertIn('maxlength="5"', html)
+        self.assertIn('placeholder="HH:MM"', html)
+
     def test_component_key_does_not_use_streamlit_event_separator(self):
         key = safe_component_key("form_field__0__hora_iniciada_hhmm")
 

@@ -33,15 +33,3 @@
   border-color: var(--st-primary-color, #008c95);
   box-shadow: 0 0 0 1px var(--st-primary-color, #008c95);
 }
-
-.hhmm-field small {
-  display: block;
-  min-height: 18px;
-  margin-top: 4px;
-  color: var(--st-text-color, #6b7280);
-  font-size: 0.78rem;
-}
-
-.hhmm-field small[data-invalid="true"] {
-  color: #b42318;
-}

@@ -333,15 +333,15 @@ def parse_time_value(value):
     return time(0, 0)
 
 
-def time_hhmm_input(label: str, *, value: time, key: str) -> time | None:
+def time_hhmm_input(label: str, *, value: time | None, key: str) -> time | None:
     """Recebe quatro números HHMM e devolve um horário validado."""
     raw_value = time_hhmm_component(
         label=label,
-        value=f"{time_to_hhmm(value):04d}",
+        value="" if value is None else f"{time_to_hhmm(value):04d}",
         key=key,
     )
     parsed = parse_hhmm(raw_value) if len(raw_value) == 4 else None
-    if parsed is None:
+    if raw_value and parsed is None:
         st.caption(":red[Horário inválido. Os minutos devem estar entre 00 e 59.]")
     return parsed
 
@@ -719,10 +719,10 @@ def render_lancamento_screen():
     
     data_producao = st.date_input("Data", value=date.today(), format="DD/MM/YYYY", key=data_producao_key)
     hora_iniciada = time_hhmm_input(
-        "Hora início", value=time(0, 0), key=hora_iniciada_key
+        "Hora início", value=None, key=hora_iniciada_key
     )
     hora_finalizada = time_hhmm_input(
-        "Hora fim", value=time(0, 0), key=hora_finalizada_key
+        "Hora fim", value=None, key=hora_finalizada_key
     )
     quantidade_produzida = st.number_input("Quantidade", min_value=0, step=1, key=quantidade_produzida_key)
     pecas_mortas = st.number_input("Peças mortas", min_value=0, step=1, key=pecas_mortas_key)
@@ -877,7 +877,7 @@ def render_lancamento_pintura_screen():
     )
     hora_lancamento = time_hhmm_input(
         "Hora do lançamento",
-        value=time(0, 0),
+        value=None,
         key=painting_form_key("hora_lancamento_hhmm"),
     )
     quantidade = st.number_input("Quantidade", min_value=0, step=1, key=painting_form_key("quantidade"))
