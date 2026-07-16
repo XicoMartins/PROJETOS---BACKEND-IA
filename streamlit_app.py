@@ -33,6 +33,8 @@ from core.excel_utils import (
 )
 from core.qr_utils import extract_process_id, is_painting_process
 from core.qr_browser import qr_browser_scanner
+from core.time_input import time_hhmm_component
+from core.time_utils import parse_hhmm, time_to_hhmm
 
 st.set_page_config(
     page_title="Registro de Producao",
@@ -330,6 +332,19 @@ def parse_time_value(value):
             continue
     return time(0, 0)
 
+
+def time_hhmm_input(label: str, *, value: time, key: str) -> time | None:
+    """Recebe quatro números HHMM e devolve um horário validado."""
+    raw_value = time_hhmm_component(
+        label=label,
+        value=f"{time_to_hhmm(value):04d}",
+        key=key,
+    )
+    parsed = parse_hhmm(raw_value) if len(raw_value) == 4 else None
+    if parsed is None:
+        st.caption(":red[Horário inválido. Os minutos devem estar entre 00 e 59.]")
+    return parsed
+
 def split_operadores(value):
     if isinstance(value, list):
         return [normalize_text(item) for item in value if normalize_text(item)]
@@ -355,7 +370,11 @@ def validate_inputs(cliente, acabado, numero_display, ferramental, processo, dat
         erros.append("Selecione ao menos um operador.")
     elif len(operadores_selecionados) != numero_operadores:
         erros.append("Quantidade de operadores incorreta.")
-    if hora_iniciada and hora_finalizada and hora_finalizada < hora_iniciada:
+    if hora_iniciada is None:
+        erros.append("Hora inicial inválida. Digite no formato HHMM, por exemplo 0830.")
+    if hora_finalizada is None:
+        erros.append("Hora final inválida. Digite no formato HHMM, por exemplo 1745.")
+    if hora_iniciada is not None and hora_finalizada is not None and hora_finalizada < hora_iniciada:
         erros.append("Hora final deve ser >= inicial.")
     if quantidade_total < quantidade_produzida:
         erros.append("Quantidade total deve ser >= produzida.")
@@ -636,8 +655,8 @@ def render_lancamento_screen():
     processo_key = form_key("processo")
     processo_custom_key = form_key("processo_custom")
     data_producao_key = form_key("data_producao")
-    hora_iniciada_key = form_key("hora_iniciada")
-    hora_finalizada_key = form_key("hora_finalizada")
+    hora_iniciada_key = form_key("hora_iniciada_hhmm")
+    hora_finalizada_key = form_key("hora_finalizada_hhmm")
     quantidade_produzida_key = form_key("quantidade_produzida")
     pecas_mortas_key = form_key("pecas_mortas")
     quantidade_total_key = form_key("quantidade_total")
@@ -699,8 +718,12 @@ def render_lancamento_screen():
     numero_display = st.text_input("Codigo (8 digitos)", key=numero_display_key, max_chars=8)
     
     data_producao = st.date_input("Data", value=date.today(), format="DD/MM/YYYY", key=data_producao_key)
-    hora_iniciada = st.time_input("Hora início", value=time(0,0), key=hora_iniciada_key)
-    hora_finalizada = st.time_input("Hora fim", value=time(0,0), key=hora_finalizada_key)
+    hora_iniciada = time_hhmm_input(
+        "Hora início", value=time(0, 0), key=hora_iniciada_key
+    )
+    hora_finalizada = time_hhmm_input(
+        "Hora fim", value=time(0, 0), key=hora_finalizada_key
+    )
     quantidade_produzida = st.number_input("Quantidade", min_value=0, step=1, key=quantidade_produzida_key)
     pecas_mortas = st.number_input("Peças mortas", min_value=0, step=1, key=pecas_mortas_key)
     quantidade_total = st.number_input("Quantidade total", min_value=0, step=1, key=quantidade_total_key)
@@ -852,8 +875,10 @@ def render_lancamento_pintura_screen():
     data_producao = st.date_input(
         "Data", value=date.today(), format="DD/MM/YYYY", key=painting_form_key("data_producao"),
     )
-    hora_lancamento = st.time_input(
-        "Hora do lançamento", value=time(0, 0), key=painting_form_key("hora_lancamento"),
+    hora_lancamento = time_hhmm_input(
+        "Hora do lançamento",
+        value=time(0, 0),
+        key=painting_form_key("hora_lancamento_hhmm"),
     )
     quantidade = st.number_input("Quantidade", min_value=0, step=1, key=painting_form_key("quantidade"))
     quantidade_total = st.number_input(
@@ -896,6 +921,8 @@ def render_lancamento_pintura_screen():
         erros = [f"{label} obrigatorio." for value, label in obrigatorios if not value]
         if numero_display and not re.fullmatch(r"\d{8}", str(numero_display).strip()):
             erros.append("Codigo deve ter 8 digitos.")
+        if hora_lancamento is None:
+            erros.append("Hora do lançamento inválida. Digite no formato HHMM.")
         if quantidade_total < quantidade:
             erros.append("Quantidade total deve ser >= quantidade.")
 
@@ -1121,10 +1148,10 @@ def render_ajustes_pintura_screen():
         format="DD/MM/YYYY",
         key=f"{key_base}__data_producao",
     )
-    hora_lancamento = st.time_input(
+    hora_lancamento = time_hhmm_input(
         "Hora do lançamento",
         value=parse_time_value(selected_entry.get("hora_lancamento")),
-        key=f"{key_base}__hora_lancamento",
+        key=f"{key_base}__hora_lancamento_hhmm",
     )
     quantidade = st.number_input(
         "Quantidade",
@@ -1166,6 +1193,8 @@ def render_ajustes_pintura_screen():
             r"\d{8}", str(numero_display).strip()
         ):
             erros.append("Código deve ter 8 dígitos.")
+        if hora_lancamento is None:
+            erros.append("Hora do lançamento inválida. Digite no formato HHMM.")
         if quantidade_total < quantidade:
             erros.append("Quantidade total deve ser >= quantidade.")
 
@@ -1269,8 +1298,8 @@ def render_ajustes_producao_screen():
     processo_key = f"{key_base}__processo"
     processo_custom_key = f"{key_base}__processo_custom"
     data_producao_key = f"{key_base}__data_producao"
-    hora_iniciada_key = f"{key_base}__hora_iniciada"
-    hora_finalizada_key = f"{key_base}__hora_finalizada"
+    hora_iniciada_key = f"{key_base}__hora_iniciada_hhmm"
+    hora_finalizada_key = f"{key_base}__hora_finalizada_hhmm"
     quantidade_produzida_key = f"{key_base}__quantidade_produzida"
     pecas_mortas_key = f"{key_base}__pecas_mortas"
     quantidade_total_key = f"{key_base}__quantidade_total"
@@ -1336,12 +1365,12 @@ def render_ajustes_producao_screen():
         format="DD/MM/YYYY",
         key=data_producao_key,
     )
-    hora_iniciada = st.time_input(
+    hora_iniciada = time_hhmm_input(
         "Hora inicio",
         value=parse_time_value(selected_entry.get("hora_inicio")),
         key=hora_iniciada_key,
     )
-    hora_finalizada = st.time_input(
+    hora_finalizada = time_hhmm_input(
         "Hora fim",
         value=parse_time_value(selected_entry.get("hora_fim")),
         key=hora_finalizada_key,

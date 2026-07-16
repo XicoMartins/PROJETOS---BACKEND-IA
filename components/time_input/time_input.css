@@ -1,0 +1,47 @@
+.hhmm-field {
+  box-sizing: border-box;
+  width: 100%;
+  color: var(--st-text-color, #31333f);
+  font-family: var(--st-font, "Segoe UI", sans-serif);
+}
+
+.hhmm-field * {
+  box-sizing: border-box;
+}
+
+.hhmm-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.hhmm-field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--st-border-color, #c8c9cc);
+  border-radius: 8px;
+  outline: none;
+  background: var(--st-background-color, #fff);
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.hhmm-field input:focus {
+  border-color: var(--st-primary-color, #008c95);
+  box-shadow: 0 0 0 1px var(--st-primary-color, #008c95);
+}
+
+.hhmm-field small {
+  display: block;
+  min-height: 18px;
+  margin-top: 4px;
+  color: var(--st-text-color, #6b7280);
+  font-size: 0.78rem;
+}
+
+.hhmm-field small[data-invalid="true"] {
+  color: #b42318;
+}
