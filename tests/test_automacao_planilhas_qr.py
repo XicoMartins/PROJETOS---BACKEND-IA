@@ -7,7 +7,12 @@ from unittest.mock import patch
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
 
-from scripts.automacao_planilhas_qr import Configuracao, Destino, executar
+from scripts.automacao_planilhas_qr import (
+    Configuracao,
+    Destino,
+    PublicacaoPainel,
+    executar,
+)
 
 
 class AutomacaoPlanilhasQrTests(unittest.TestCase):
@@ -143,6 +148,42 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         self.assertEqual(simulacao[0].ids, ["001143"])
         self.assertEqual(hash_antes, list(self.config.pasta_backups.rglob("SIMULACAO.xlsx"))[0].read_bytes())
         self.assertEqual(aplicacao[0].ids, ["001143"])
+
+    def test_publica_planilha_processada_no_painel(self):
+        entrada = self.entrada_producao / "NOVA LISTA PAINEL.xlsx"
+        self._criar_planilha(entrada, [("Corte", None)], incluir_id=False)
+        raiz_painel = self.raiz / "painel"
+        painel_producao = raiz_painel / "planilhas"
+        painel_pintura = raiz_painel / "planilhas_pintura"
+        config_painel = Configuracao(
+            **{
+                **self.config.__dict__,
+                "publicacao_painel": PublicacaoPainel(
+                    raiz_projeto=raiz_painel,
+                    bases={
+                        "producao": painel_producao,
+                        "pintura": painel_pintura,
+                    },
+                    sincronizar_github=False,
+                    branch_github="main",
+                ),
+            }
+        )
+
+        resultados = executar(config_painel, aplicar=True, tipo="producao")
+
+        copia_painel = painel_producao / entrada.name
+        self.assertTrue(copia_painel.is_file())
+        self.assertEqual(
+            copia_painel.read_bytes(),
+            (self.base_producao / entrada.name).read_bytes(),
+        )
+        workbook = load_workbook(copia_painel, data_only=False)
+        try:
+            self.assertEqual(workbook["PROCESSOS"]["G2"].value, "001143")
+        finally:
+            workbook.close()
+        self.assertEqual(resultados[0].arquivos_git_painel, [copia_painel])
 
     def test_rejeita_id_que_ja_existe_na_base(self):
         entrada = self.entrada_producao / "ID REPETIDO.xlsx"

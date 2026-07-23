@@ -20,5 +20,15 @@
   "github": {
     "sincronizar": false,
     "branch": "main"
+  },
+  "painel": {
+    "publicar": false,
+    "raiz_projeto": "C:/caminho/para/PROJETOS - PAINEL PRODUCAO IA",
+    "base_producao": "planilhas",
+    "base_pintura": "planilhas_pintura",
+    "github": {
+      "sincronizar": false,
+      "branch": "main"
+    }
   }
 }

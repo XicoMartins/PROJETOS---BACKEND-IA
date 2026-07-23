@@ -25,6 +25,16 @@ fórmulas, valores e formatação do arquivo.
 10. Se houver erro de conteúdo, o arquivo vai para `automacao_qr\rejeitados` junto
     de um arquivo `.erro.txt` explicando o motivo.
 
+Quando a seção `painel` está habilitada na configuração, a mesma planilha já
+preenchida com `PROCESSO_ID` também é publicada no outro projeto:
+
+- produção: `planilhas`;
+- pintura: `planilhas_pintura`.
+
+Antes de processar, a automação valida e atualiza os dois repositórios. Ao final,
+cria commits separados e executa o push do backend e do painel. Se qualquer um dos
+repositórios tiver alterações pendentes, o processamento não começa.
+
 Arquivos temporários do Excel (`~$...xlsx`) são ignorados. Se o arquivo ainda estiver
 sendo salvo, ele fica na entrada e é verificado novamente na próxima execução.
 
@@ -50,6 +60,16 @@ Na fase piloto, mantenha:
 "github": {
   "sincronizar": false,
   "branch": "main"
+},
+"painel": {
+  "publicar": true,
+  "raiz_projeto": "S:/caminho/PROJETOS - PAINEL PRODUÇÃO IA",
+  "base_producao": "planilhas",
+  "base_pintura": "planilhas_pintura",
+  "github": {
+    "sincronizar": true,
+    "branch": "main"
+  }
 }
 ```
 

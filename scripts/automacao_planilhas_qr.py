@@ -18,7 +18,7 @@ import sys
 import tempfile
 import uuid
 from copy import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -59,6 +59,14 @@ class Destino:
 
 
 @dataclass(frozen=True)
+class PublicacaoPainel:
+    raiz_projeto: Path
+    bases: dict[str, Path]
+    sincronizar_github: bool
+    branch_github: str
+
+
+@dataclass(frozen=True)
 class Configuracao:
     raiz_projeto: Path
     destinos: tuple[Destino, ...]
@@ -73,6 +81,7 @@ class Configuracao:
     estabilidade_segundos: int
     sincronizar_github: bool
     branch_github: str
+    publicacao_painel: PublicacaoPainel | None = None
 
 
 @dataclass
@@ -97,6 +106,7 @@ class Resultado:
     mensagem: str
     ids: list[str]
     arquivos_git: list[Path]
+    arquivos_git_painel: list[Path] = field(default_factory=list)
 
 
 def _expandir_caminho(valor: str, raiz: Path) -> Path:
@@ -125,6 +135,26 @@ def carregar_configuracao(caminho: Path) -> Configuracao:
     if modo not in {"id", "url"}:
         raise ValueError("qr.modo deve ser 'id' ou 'url'")
 
+    dados_painel = dados.get("painel", {})
+    publicacao_painel = None
+    if dados_painel.get("publicar", False):
+        raiz_painel = _expandir_caminho(dados_painel["raiz_projeto"], raiz)
+        publicacao_painel = PublicacaoPainel(
+            raiz_projeto=raiz_painel,
+            bases={
+                tipo: _expandir_caminho(
+                    dados_painel[f"base_{tipo}"], raiz_painel
+                )
+                for tipo in TIPOS_VALIDOS
+            },
+            sincronizar_github=bool(
+                dados_painel.get("github", {}).get("sincronizar", False)
+            ),
+            branch_github=str(
+                dados_painel.get("github", {}).get("branch", "main")
+            ),
+        )
+
     return Configuracao(
         raiz_projeto=raiz,
         destinos=destinos,
@@ -139,6 +169,7 @@ def carregar_configuracao(caminho: Path) -> Configuracao:
         estabilidade_segundos=max(0, int(dados.get("estabilidade_segundos", 10))),
         sincronizar_github=bool(dados.get("github", {}).get("sincronizar", False)),
         branch_github=str(dados.get("github", {}).get("branch", "main")),
+        publicacao_painel=publicacao_painel,
     )
 
 
@@ -155,6 +186,9 @@ def preparar_pastas(config: Configuracao) -> None:
         config.pasta_estado,
     ):
         pasta.mkdir(parents=True, exist_ok=True)
+    if config.publicacao_painel:
+        for pasta in config.publicacao_painel.bases.values():
+            pasta.mkdir(parents=True, exist_ok=True)
 
 
 def _agora_iso() -> str:
@@ -510,6 +544,14 @@ def processar_arquivo(
         raise ErroValidacao(
             f"já existe uma planilha com esse nome na base: {alvo_planilha.name}"
         )
+    alvo_painel = None
+    if config.publicacao_painel:
+        alvo_painel = config.publicacao_painel.bases[destino.tipo] / arquivo.name
+        if alvo_painel.exists():
+            raise ErroValidacao(
+                "já existe uma planilha com esse nome no painel: "
+                f"{alvo_painel.name}"
+            )
     hash_arquivo = _hash_arquivo(arquivo)
     if conexao.execute(
         "SELECT 1 FROM execucoes WHERE hash_arquivo = ?", (hash_arquivo,)
@@ -603,6 +645,14 @@ def processar_arquivo(
         os.replace(temporario_alvo, alvo_planilha)
         publicados.append(alvo_planilha)
 
+        arquivos_git_painel: list[Path] = []
+        if alvo_painel:
+            temporario_painel = alvo_painel.with_name(f".{alvo_painel.name}.tmp")
+            shutil.copy2(planilha_temporaria, temporario_painel)
+            os.replace(temporario_painel, alvo_painel)
+            publicados.append(alvo_painel)
+            arquivos_git_painel.append(alvo_painel)
+
         shutil.copytree(pasta_qr_temporaria, qr_final)
         publicados.append(qr_final)
         _salvar_json_atomico(manifesto_path, manifesto_novo)
@@ -626,6 +676,7 @@ def processar_arquivo(
             f"{len(novos_ids)} IDs criados e {len(todos_ids)} QR Codes gerados",
             todos_ids,
             arquivos_git,
+            arquivos_git_painel,
         )
     except Exception:
         if manifesto_atualizado:
@@ -665,10 +716,10 @@ def rejeitar_arquivo(
     )
 
 
-def _git(config: Configuracao, *argumentos: str) -> subprocess.CompletedProcess:
+def _git_raiz(raiz: Path, *argumentos: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["git", *argumentos],
-        cwd=config.raiz_projeto,
+        cwd=raiz,
         text=True,
         capture_output=True,
         check=True,
@@ -676,31 +727,49 @@ def _git(config: Configuracao, *argumentos: str) -> subprocess.CompletedProcess:
 
 
 def validar_git_limpo(config: Configuracao) -> None:
-    status = _git(config, "status", "--porcelain").stdout.strip()
+    validar_repositorio_git(
+        config.raiz_projeto, config.branch_github, "repositório backend"
+    )
+
+
+def validar_repositorio_git(raiz: Path, branch: str, descricao: str) -> None:
+    status = _git_raiz(raiz, "status", "--porcelain").stdout.strip()
     if status:
         raise RuntimeError(
-            "sincronização GitHub ativada, mas o repositório possui alterações pendentes"
+            f"sincronização GitHub ativada, mas o {descricao} "
+            "possui alterações pendentes"
         )
-    _git(config, "pull", "--ff-only", "origin", config.branch_github)
+    _git_raiz(raiz, "pull", "--ff-only", "origin", branch)
 
 
-def sincronizar_github(config: Configuracao, arquivos: Iterable[Path]) -> None:
+def sincronizar_repositorio_github(
+    raiz: Path, branch: str, arquivos: Iterable[Path], descricao: str
+) -> None:
     relativos = sorted(
         {
-            str(arquivo.resolve().relative_to(config.raiz_projeto)).replace("\\", "/")
+            str(arquivo.resolve().relative_to(raiz)).replace("\\", "/")
             for arquivo in arquivos
         }
     )
     if not relativos:
         return
-    _git(config, "add", "--", *relativos)
-    _git(
-        config,
+    _git_raiz(raiz, "add", "--", *relativos)
+    _git_raiz(
+        raiz,
         "commit",
         "-m",
-        f"Automatiza {len(relativos)} arquivo(s) de processos e QR Codes",
+        f"Automatiza {len(relativos)} arquivo(s) de processos no {descricao}",
     )
-    _git(config, "push", "origin", config.branch_github)
+    _git_raiz(raiz, "push", "origin", branch)
+
+
+def sincronizar_github(config: Configuracao, arquivos: Iterable[Path]) -> None:
+    sincronizar_repositorio_github(
+        config.raiz_projeto,
+        config.branch_github,
+        arquivos,
+        "backend",
+    )
 
 
 def executar(
@@ -721,9 +790,21 @@ def executar(
     )
     if aplicar and config.sincronizar_github and ha_arquivo_na_fila:
         validar_git_limpo(config)
+    if (
+        aplicar
+        and config.publicacao_painel
+        and config.publicacao_painel.sincronizar_github
+        and ha_arquivo_na_fila
+    ):
+        validar_repositorio_git(
+            config.publicacao_painel.raiz_projeto,
+            config.publicacao_painel.branch_github,
+            "repositório do painel",
+        )
 
     resultados: list[Resultado] = []
     arquivos_git: list[Path] = []
+    arquivos_git_painel: list[Path] = []
     with TravaExecucao(config.pasta_estado / "automacao.lock"):
         conexao = _abrir_banco(config)
         try:
@@ -752,6 +833,7 @@ def executar(
                         )
                     resultados.append(resultado)
                     arquivos_git.extend(resultado.arquivos_git)
+                    arquivos_git_painel.extend(resultado.arquivos_git_painel)
                     registrar_log(
                         config,
                         {
@@ -768,6 +850,18 @@ def executar(
 
     if aplicar and config.sincronizar_github and arquivos_git:
         sincronizar_github(config, arquivos_git)
+    if (
+        aplicar
+        and config.publicacao_painel
+        and config.publicacao_painel.sincronizar_github
+        and arquivos_git_painel
+    ):
+        sincronizar_repositorio_github(
+            config.publicacao_painel.raiz_projeto,
+            config.publicacao_painel.branch_github,
+            arquivos_git_painel,
+            "painel",
+        )
     return resultados
 
 
