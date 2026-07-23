@@ -327,7 +327,14 @@ def analisar_planilha(arquivo: Path) -> AnalisePlanilha:
         registros: dict[int, dict[str, str]] = {}
         ids_na_planilha: dict[str, int] = {}
 
-        for numero_linha in range(2, worksheet.max_row + 1):
+        ultima_linha = worksheet.max_row
+        if ultima_linha is None:
+            worksheet.calculate_dimension(force=True)
+            ultima_linha = worksheet.max_row
+        if ultima_linha is None:
+            raise ErroValidacao("não foi possível determinar as linhas da planilha")
+
+        for numero_linha in range(2, ultima_linha + 1):
             valores = {
                 coluna: str(worksheet.cell(numero_linha, cabecalhos[coluna]).value or "").strip()
                 for coluna in COLUNAS_OBRIGATORIAS
