@@ -493,13 +493,52 @@ def _bases(config: Configuracao) -> list[Path]:
     return [destino.base for destino in config.destinos]
 
 
-def _ids_da_base(config: Configuracao) -> dict[str, str]:
+def _ids_da_base(
+    config: Configuracao,
+    excluir_planilha: Path | None = None,
+) -> dict[str, str]:
     registros = carregar_base(_bases(config))
+    nome_excluido = excluir_planilha.name if excluir_planilha else None
     return {
         registro["processo_id"]: f"{registro['planilha']}, linha {registro['linha']}"
         for registro in registros
+        if registro["planilha"] != nome_excluido
     }
 
+
+def _herdar_ids_da_versao_anterior(
+    analise: AnalisePlanilha,
+    analise_anterior: AnalisePlanilha | None,
+) -> None:
+    """Recupera IDs de linhas inalteradas quando uma lista existente é atualizada."""
+    if analise_anterior is None:
+        return
+
+    ids_por_registro: dict[tuple[str, str, str, str], str] = {}
+    registros_duplicados: set[tuple[str, str, str, str]] = set()
+    for linha, processo_id in analise_anterior.ids_existentes.items():
+        registro = analise_anterior.registros[linha]
+        chave = (
+            registro["cliente"],
+            registro["acabado"],
+            registro["ferramental"],
+            registro["processo"],
+        )
+        if chave in ids_por_registro:
+            registros_duplicados.add(chave)
+        else:
+            ids_por_registro[chave] = processo_id
+
+    for linha in analise.linhas_sem_id:
+        registro = analise.registros[linha]
+        chave = (
+            registro["cliente"],
+            registro["acabado"],
+            registro["ferramental"],
+            registro["processo"],
+        )
+        if chave not in registros_duplicados and chave in ids_por_registro:
+            analise.ids_existentes[linha] = ids_por_registro[chave]
 
 def _registrar_execucao(
     conexao: sqlite3.Connection,
@@ -547,18 +586,16 @@ def processar_arquivo(
         )
 
     alvo_planilha = destino.base / arquivo.name
-    if alvo_planilha.exists():
-        raise ErroValidacao(
-            f"já existe uma planilha com esse nome na base: {alvo_planilha.name}"
-        )
+    atualizacao = alvo_planilha.is_file()
     alvo_painel = None
     if config.publicacao_painel:
         alvo_painel = config.publicacao_painel.bases[destino.tipo] / arquivo.name
-        if alvo_painel.exists():
+        if not atualizacao and alvo_painel.exists():
             raise ErroValidacao(
-                "já existe uma planilha com esse nome no painel: "
+                "já existe uma planilha com esse nome no painel, mas não na base: "
                 f"{alvo_painel.name}"
             )
+
     hash_arquivo = _hash_arquivo(arquivo)
     if conexao.execute(
         "SELECT 1 FROM execucoes WHERE hash_arquivo = ?", (hash_arquivo,)
@@ -566,7 +603,10 @@ def processar_arquivo(
         raise ErroValidacao("essa mesma planilha já foi processada anteriormente")
 
     analise = analisar_planilha(arquivo)
-    ids_base = _ids_da_base(config)
+    analise_anterior = analisar_planilha(alvo_planilha) if atualizacao else None
+    _herdar_ids_da_versao_anterior(analise, analise_anterior)
+
+    ids_base = _ids_da_base(config, alvo_planilha if atualizacao else None)
     for linha, processo_id in analise.ids_existentes.items():
         if processo_id in ids_base:
             raise ErroValidacao(
@@ -574,29 +614,42 @@ def processar_arquivo(
             )
 
     quantidade = len(analise.linhas_sem_id)
-    maior_id = max((int(item) for item in ids_base), default=0)
+    ids_conhecidos = [*ids_base, *analise.ids_existentes.values()]
+    maior_id = max((int(item) for item in ids_conhecidos), default=0)
     if not aplicar:
         primeiro = maior_id + 1
         previstos = [str(primeiro + indice).zfill(6) for indice in range(quantidade)]
+        acao = "atualização válida" if atualizacao else "planilha válida"
         return Resultado(
             arquivo.name,
             destino.tipo,
             "simulacao",
-            f"planilha válida; {quantidade} IDs seriam atribuídos",
+            f"{acao}; {quantidade} IDs seriam atribuídos",
             previstos,
             [],
         )
+
+    qr_final = config.pasta_qrs / arquivo.stem
+    if not atualizacao and qr_final.exists():
+        raise ErroValidacao(f"já existe uma pasta de QR para {arquivo.stem}")
 
     novos_ids = reservar_ids(conexao, quantidade, maior_id)
     pasta_execucao = config.pasta_estado / "temporarios" / uuid.uuid4().hex
     planilha_temporaria = pasta_execucao / arquivo.name
     pasta_qr_temporaria = pasta_execucao / "qrs" / arquivo.stem
+    pasta_qr_anterior = pasta_execucao / "qrs_anteriores" / arquivo.stem
     manifesto_path = config.pasta_qrs / "manifesto_qr.json"
-    qr_final = config.pasta_qrs / arquivo.stem
-    publicados: list[Path] = []
-    arquivos_git: list[Path] = []
     manifesto_anterior = manifesto_path.read_bytes() if manifesto_path.is_file() else None
-    manifesto_atualizado = False
+    alvo_anterior = alvo_planilha.read_bytes() if alvo_planilha.is_file() else None
+    painel_anterior = (
+        alvo_painel.read_bytes() if alvo_painel and alvo_painel.is_file() else None
+    )
+    qr_anterior_existia = qr_final.is_dir()
+    arquivos_qr_anteriores = sorted(qr_final.glob("*.png")) if qr_anterior_existia else []
+    processado: Path | None = None
+
+    if qr_anterior_existia:
+        shutil.copytree(qr_final, pasta_qr_anterior)
 
     try:
         ids_por_linha = preencher_ids(
@@ -605,9 +658,6 @@ def processar_arquivo(
         validada = analisar_planilha(planilha_temporaria)
         if len(validada.ids_existentes) != len(validada.linhas):
             raise RuntimeError("a validação final encontrou linhas sem PROCESSO_ID")
-
-        if qr_final.exists():
-            raise ErroValidacao(f"já existe uma pasta de QR para {arquivo.stem}")
 
         novos_registros: list[dict] = []
         for numero_linha in analise.linhas:
@@ -631,39 +681,51 @@ def processar_arquivo(
             )
 
         manifesto_atual = _carregar_manifesto(manifesto_path)
-        ids_manifesto = {str(item.get("processo_id")) for item in manifesto_atual}
-        colisao = ids_manifesto.intersection(item["processo_id"] for item in novos_registros)
+        manifesto_base = [
+            item for item in manifesto_atual if item.get("planilha") != arquivo.name
+        ]
+        ids_manifesto = {str(item.get("processo_id")) for item in manifesto_base}
+        colisao = ids_manifesto.intersection(
+            item["processo_id"] for item in novos_registros
+        )
         if colisao:
             raise RuntimeError(
                 "IDs já existentes no manifesto: " + ", ".join(sorted(colisao))
             )
         manifesto_novo = sorted(
-            [*manifesto_atual, *novos_registros],
+            [*manifesto_base, *novos_registros],
             key=lambda item: int(item["processo_id"]),
         )
 
         data = datetime.now().strftime("%Y-%m-%d")
-        backup = _nome_disponivel(config.pasta_backups / data / destino.tipo, arquivo.name)
-        backup.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(arquivo, backup)
+        backup_entrada = _nome_disponivel(
+            config.pasta_backups / data / destino.tipo, arquivo.name
+        )
+        backup_entrada.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(arquivo, backup_entrada)
+        if atualizacao:
+            backup_anterior = _nome_disponivel(
+                config.pasta_backups / data / destino.tipo / "anteriores",
+                arquivo.name,
+            )
+            backup_anterior.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(alvo_planilha, backup_anterior)
 
         temporario_alvo = alvo_planilha.with_name(f".{alvo_planilha.name}.tmp")
         shutil.copy2(planilha_temporaria, temporario_alvo)
         os.replace(temporario_alvo, alvo_planilha)
-        publicados.append(alvo_planilha)
 
         arquivos_git_painel: list[Path] = []
         if alvo_painel:
             temporario_painel = alvo_painel.with_name(f".{alvo_painel.name}.tmp")
             shutil.copy2(planilha_temporaria, temporario_painel)
             os.replace(temporario_painel, alvo_painel)
-            publicados.append(alvo_painel)
             arquivos_git_painel.append(alvo_painel)
 
+        if qr_final.exists():
+            shutil.rmtree(qr_final)
         shutil.copytree(pasta_qr_temporaria, qr_final)
-        publicados.append(qr_final)
         _salvar_json_atomico(manifesto_path, manifesto_novo)
-        manifesto_atualizado = True
 
         processado = _nome_disponivel(
             config.pasta_processados / data / destino.tipo, arquivo.name
@@ -675,36 +737,57 @@ def processar_arquivo(
         _registrar_execucao(
             conexao, hash_arquivo, arquivo.name, destino.tipo, todos_ids
         )
-        arquivos_git = [alvo_planilha, manifesto_path, *sorted(qr_final.glob("*.png"))]
+        arquivos_git = [
+            alvo_planilha,
+            manifesto_path,
+            *arquivos_qr_anteriores,
+            *sorted(qr_final.glob("*.png")),
+        ]
+        acao = "Planilha atualizada" if atualizacao else "Planilha criada"
         return Resultado(
             arquivo.name,
             destino.tipo,
             "processado",
-            f"{len(novos_ids)} IDs criados e {len(todos_ids)} QR Codes gerados",
+            f"{acao}; {len(novos_ids)} IDs criados e "
+            f"{len(todos_ids)} QR Codes gerados",
             todos_ids,
             arquivos_git,
             arquivos_git_painel,
         )
     except Exception:
-        if manifesto_atualizado:
-            if manifesto_anterior is None:
-                manifesto_path.unlink(missing_ok=True)
+        if manifesto_anterior is None:
+            manifesto_path.unlink(missing_ok=True)
+        else:
+            temporario_manifesto = manifesto_path.with_name(
+                f".{manifesto_path.name}.{uuid.uuid4().hex}.rollback"
+            )
+            temporario_manifesto.write_bytes(manifesto_anterior)
+            os.replace(temporario_manifesto, manifesto_path)
+
+        for caminho, conteudo in (
+            (alvo_planilha, alvo_anterior),
+            (alvo_painel, painel_anterior),
+        ):
+            if caminho is None:
+                continue
+            if conteudo is None:
+                caminho.unlink(missing_ok=True)
             else:
-                temporario_manifesto = manifesto_path.with_name(
-                    f".{manifesto_path.name}.{uuid.uuid4().hex}.rollback"
+                temporario = caminho.with_name(
+                    f".{caminho.name}.{uuid.uuid4().hex}.rollback"
                 )
-                temporario_manifesto.write_bytes(manifesto_anterior)
-                os.replace(temporario_manifesto, manifesto_path)
-        # Somente artefatos novos desta execução podem ser removidos.
-        for publicado in reversed(publicados):
-            if publicado.is_dir():
-                shutil.rmtree(publicado, ignore_errors=True)
-            else:
-                publicado.unlink(missing_ok=True)
+                temporario.write_bytes(conteudo)
+                os.replace(temporario, caminho)
+
+        if qr_final.exists():
+            shutil.rmtree(qr_final, ignore_errors=True)
+        if qr_anterior_existia:
+            shutil.copytree(pasta_qr_anterior, qr_final)
+        if processado and processado.exists() and not arquivo.exists():
+            shutil.move(str(processado), str(arquivo))
         raise
     finally:
         shutil.rmtree(pasta_execucao, ignore_errors=True)
-
 
 def rejeitar_arquivo(
     config: Configuracao,

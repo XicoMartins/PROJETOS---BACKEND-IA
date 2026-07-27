@@ -201,6 +201,77 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         erros = list(self.config.pasta_rejeitados.rglob("*.erro.txt"))
         self.assertIn("já usado", erros[0].read_text(encoding="utf-8"))
 
+    def test_atualiza_planilha_preservando_ids_e_removendo_qr_obsoleto(self):
+        alvo = self.base_producao / "BASE ATUAL.xlsx"
+        self._criar_planilha(
+            alvo,
+            [("Mantido", "001142"), ("Obsoleto", "001140")],
+            incluir_id=True,
+        )
+        entrada = self.entrada_producao / alvo.name
+        self._criar_planilha(
+            entrada,
+            [("Mantido", None), ("Novo", None)],
+            incluir_id=True,
+        )
+
+        pasta_qr = self.config.pasta_qrs / alvo.stem
+        pasta_qr.mkdir()
+        qr_obsoleto = pasta_qr / "001140_OBSOLETO.png"
+        qr_mantido = pasta_qr / "001142_MANTIDO.png"
+        qr_obsoleto.write_bytes(b"qr antigo")
+        qr_mantido.write_bytes(b"qr mantido")
+        (self.config.pasta_qrs / "manifesto_qr.json").write_text(
+            json.dumps(
+                [
+                    {"processo_id": "001141", "planilha": "BASE PINTURA.xlsx"},
+                    {
+                        "processo_id": "001140",
+                        "planilha": alvo.name,
+                        "arquivo_qr": f"{alvo.stem}/{qr_obsoleto.name}",
+                    },
+                    {
+                        "processo_id": "001142",
+                        "planilha": alvo.name,
+                        "arquivo_qr": f"{alvo.stem}/{qr_mantido.name}",
+                    },
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        resultados = executar(self.config, aplicar=True, tipo="producao")
+
+        self.assertEqual(resultados[0].status, "processado")
+        self.assertEqual(resultados[0].ids, ["001142", "001143"])
+        self.assertIn("Planilha atualizada", resultados[0].mensagem)
+        workbook = load_workbook(alvo, data_only=False)
+        try:
+            worksheet = workbook["PROCESSOS"]
+            self.assertEqual(worksheet["G2"].value, "001142")
+            self.assertEqual(worksheet["G3"].value, "001143")
+        finally:
+            workbook.close()
+
+        self.assertEqual(
+            {arquivo.name for arquivo in pasta_qr.glob("*.png")},
+            {"001142_MANTIDO.png", "001143_NOVO.png"},
+        )
+        manifesto = json.loads(
+            (self.config.pasta_qrs / "manifesto_qr.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            [item["processo_id"] for item in manifesto],
+            ["001141", "001142", "001143"],
+        )
+        self.assertIn(qr_obsoleto, resultados[0].arquivos_git)
+        self.assertTrue(
+            list(self.config.pasta_backups.rglob("anteriores/BASE ATUAL.xlsx"))
+        )
+        self.assertTrue(list(self.config.pasta_processados.rglob(entrada.name)))
+
     def test_fila_vazia_nao_consulta_github(self):
         config_github = Configuracao(
             **{
