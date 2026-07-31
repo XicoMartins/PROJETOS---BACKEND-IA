@@ -41,6 +41,7 @@ PROJETOS---BACKEND-IA/
 │   ├── db_utils.py          # BD sem Django
 │   └── excel_utils.py       # Leitura de Excel
 ├── planilhas/               # Planilhas de processo
+│   ├── CLIENTES.xlsx        # Cadastro mestre, independente dos processos
 │   ├── LISTA DE OPERADORES.xlsx
 │   └── ... (outras planilhas)
 └── assets/                  # Logo e imagens
@@ -51,7 +52,8 @@ PROJETOS---BACKEND-IA/
 ## Funcionalidades
 
 ### 📝 Lançamento de Registros
-- Seleção de cliente, display, máquina, processo
+- Seleção independente de cliente e display, permitindo o mesmo produto para vários clientes
+- Clientes mantidos em `planilhas/CLIENTES.xlsx`; listas de processo não possuem coluna `CLIENTE`
 - Validação automática
 - Salva em banco persistente quando `DATABASE_URL` estiver configurada
 

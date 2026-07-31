@@ -9,6 +9,8 @@ from core.qr_utils import normalize_process_id
 # Cache simples em memoria
 _DATA_CACHE = None
 _DATA_CACHE_SIGNATURE = None
+_CLIENTES_CACHE = None
+_CLIENTES_CACHE_SIGNATURE = None
 _OPERADORES_CACHE = None
 _OPERADORES_CACHE_SIGNATURE = None
 SHEET_ENV_NAME = "PLANILHA_PROCESSO_SHEET"
@@ -29,7 +31,8 @@ PREFERRED_FILENAMES = [
 ]
 EXCEL_PATTERN = "*.xlsx"
 OPERADORES_FILENAME = "LISTA DE OPERADORES.xlsx"
-REQUIRED_COLUMNS = {"CLIENTE", "ACABADO", "FERRAMENTAL", "PROCESSO"}
+CLIENTES_FILENAME = "CLIENTES.xlsx"
+REQUIRED_COLUMNS = {"ACABADO", "FERRAMENTAL", "PROCESSO"}
 
 
 def _build_paths_signature(paths: list) -> tuple:
@@ -56,7 +59,7 @@ def _resolve_excel_paths() -> list:
 
         matches = sorted(folder.glob(EXCEL_PATTERN))
         for m in matches:
-            if m.name == OPERADORES_FILENAME or m.name.startswith("~$"):
+            if m.name in {OPERADORES_FILENAME, CLIENTES_FILENAME} or m.name.startswith("~$"):
                 continue
             if m not in found:
                 found.append(m)
@@ -155,6 +158,53 @@ def get_unique_choices(col_name):
     return choices
 
 
+def get_clientes():
+    """Retorna os clientes da planilha mestre, sem vínculo com processos."""
+    global _CLIENTES_CACHE, _CLIENTES_CACHE_SIGNATURE
+    search_paths = [
+        PLANILHAS_DIR / CLIENTES_FILENAME,
+        _get_base_dir() / CLIENTES_FILENAME,
+    ]
+    clientes_path = next((path for path in search_paths if path.exists()), None)
+    if clientes_path is None:
+        raise FileNotFoundError(f"Nao encontrei {CLIENTES_FILENAME}")
+
+    current_signature = _build_paths_signature([clientes_path])
+    if (
+        _CLIENTES_CACHE is not None
+        and _CLIENTES_CACHE_SIGNATURE == current_signature
+    ):
+        return _CLIENTES_CACHE
+
+    wb = load_workbook(clientes_path, data_only=True)
+    try:
+        _ws, rows = _pick_sheet(wb)
+        if not rows or not rows[0]:
+            clientes = []
+        else:
+            headers = [str(value or "").strip().upper() for value in rows[0]]
+            if "CLIENTE" not in headers:
+                raise ValueError(
+                    f"{CLIENTES_FILENAME} deve possuir a coluna CLIENTE"
+                )
+            cliente_index = headers.index("CLIENTE")
+            clientes = sorted(
+                {
+                    str(row[cliente_index]).strip()
+                    for row in rows[1:]
+                    if cliente_index < len(row)
+                    and row[cliente_index] not in (None, "")
+                    and str(row[cliente_index]).strip()
+                }
+            )
+    finally:
+        wb.close()
+
+    _CLIENTES_CACHE = clientes
+    _CLIENTES_CACHE_SIGNATURE = current_signature
+    return _CLIENTES_CACHE
+
+
 def get_process_choices_for_ferramental(ferramental):
     """Processos para um ferramental específico"""
     if not ferramental:
@@ -177,24 +227,8 @@ def get_process_choices_for_ferramental(ferramental):
 
 
 def get_acabados_for_cliente(cliente):
-    """Acabados para um cliente específico"""
-    if not cliente:
-        return []
-
-    data = load_process_data()
-    valores = set()
-    cliente = str(cliente).strip()
-
-    for row in data:
-        cli = row.get("CLIENTE")
-        acabado = row.get("ACABADO")
-        if cli is None or acabado is None:
-            continue
-
-        if str(cli).strip() == cliente:
-            valores.add(str(acabado).strip())
-
-    return sorted(valores)
+    """Compatibilidade: acabados não são mais vinculados ao cliente."""
+    return [value for value, _label in get_unique_choices("ACABADO")]
 
 
 def get_process_choices_for_acabado_e_ferramental(acabado, ferramental):
@@ -255,12 +289,11 @@ def get_process_by_id(processo_id: object):
     row = matches[0]
     result = {
         "processo_id": normalized_id,
-        "cliente": str(_get_row_value(row, "CLIENTE") or "").strip(),
         "acabado": str(_get_row_value(row, "ACABADO") or "").strip(),
         "ferramental": str(_get_row_value(row, "FERRAMENTAL") or "").strip(),
         "processo": str(_get_row_value(row, "PROCESSO") or "").strip(),
     }
-    missing = [key for key in ("cliente", "acabado", "ferramental", "processo") if not result[key]]
+    missing = [key for key in ("acabado", "ferramental", "processo") if not result[key]]
     if missing:
         raise ValueError(
             f"PROCESSO_ID {normalized_id} possui dados obrigatórios vazios: {', '.join(missing)}"
@@ -312,11 +345,10 @@ def get_painting_choices(col_name, **filters):
     return sorted(values)
 
 
-def get_painting_process_choices(cliente, acabado, ferramental):
+def get_painting_process_choices(acabado, ferramental):
     """Retorna processos de pintura compativeis com os campos selecionados."""
     return get_painting_choices(
         "PROCESSO",
-        CLIENTE=cliente,
         ACABADO=acabado,
         FERRAMENTAL=ferramental,
     )

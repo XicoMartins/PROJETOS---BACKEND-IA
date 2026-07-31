@@ -28,6 +28,7 @@ def carregar_base(diretorio: Path | list[Path]) -> list[dict]:
             arquivo
             for arquivo in pasta.glob("*.xlsx")
             if not arquivo.name.startswith("~$")
+            and arquivo.name.upper() != "CLIENTES.XLSX"
         )
     arquivos.sort(key=lambda arquivo: (arquivo.parent.name, arquivo.name))
     if not arquivos:

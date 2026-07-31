@@ -56,9 +56,10 @@ Para o leitor QR USB do computador do supervisor, use preferencialmente `--modo 
 1. Abra a aba **Lançamento**.
 2. O campo **Ler QR Code ou informar ID do processo** receberá o foco.
 3. Leia o QR com o leitor USB; o Enter enviado pelo leitor confirma a leitura.
-4. Confira Cliente, Display, Ferramental e Processo no resumo protegido.
-5. Preencha manualmente código, data, horários, quantidades e operadores.
-6. Use **Salvar e ler próximo** para limpar o formulário e voltar ao leitor.
+4. Selecione o Cliente separadamente na lista mestre.
+5. Confira Display, Ferramental e Processo no resumo protegido.
+6. Preencha manualmente código, data, horários, quantidades e operadores.
+7. Use **Salvar e ler próximo** para limpar o formulário e voltar ao leitor.
 
 Também é possível digitar um ID, como `000001`, ou abrir a aplicação com:
 

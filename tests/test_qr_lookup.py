@@ -33,7 +33,6 @@ class QrUtilsTests(unittest.TestCase):
 class ProcessLookupTests(unittest.TestCase):
     rows = [
         {
-            "CLIENTE": "JDE COFFEE",
             "ACABADO": "DISPLAY ARAMADO P PILÃO",
             "FERRAMENTAL": "Laser Tube",
             "PROCESSO": "15X15 Nest 1",
@@ -46,7 +45,7 @@ class ProcessLookupTests(unittest.TestCase):
     def test_finds_process_by_id(self, _load_data, _load_painting):
         result = get_process_by_id("1")
         self.assertEqual(result["processo_id"], "000001")
-        self.assertEqual(result["cliente"], "JDE COFFEE")
+        self.assertNotIn("cliente", result)
         self.assertEqual(result["processo"], "15X15 Nest 1")
 
     @patch("core.excel_utils.load_painting_process_data", return_value=[])
@@ -64,7 +63,6 @@ class ProcessLookupTests(unittest.TestCase):
         "core.excel_utils.load_painting_process_data",
         return_value=[
             {
-                "CLIENTE": "JDE COFFEE",
                 "ACABADO": "DISPLAY ARAMADO G",
                 "FERRAMENTAL": "PINTURA",
                 "PROCESSO": "CORPO ENVIO - VERMELHO",

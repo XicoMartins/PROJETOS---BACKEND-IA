@@ -43,7 +43,7 @@ except ModuleNotFoundError:
     )
 
 
-COLUNAS_OBRIGATORIAS = ("CLIENTE", "ACABADO", "FERRAMENTAL", "PROCESSO")
+COLUNAS_OBRIGATORIAS = ("ACABADO", "FERRAMENTAL", "PROCESSO")
 TIPOS_VALIDOS = ("producao", "pintura")
 
 
@@ -318,7 +318,7 @@ def analisar_planilha(arquivo: Path) -> AnalisePlanilha:
         worksheet, cabecalhos = encontrada
         coluna_id = cabecalhos.get("PROCESSO_ID", 0)
         if not coluna_id:
-            coluna_id = 7
+            coluna_id = 6
             while worksheet.cell(1, coluna_id).value not in (None, ""):
                 coluna_id += 1
 
@@ -351,7 +351,6 @@ def analisar_planilha(arquivo: Path) -> AnalisePlanilha:
 
             linhas.append(numero_linha)
             registros[numero_linha] = {
-                "cliente": valores["CLIENTE"],
                 "acabado": valores["ACABADO"],
                 "ferramental": valores["FERRAMENTAL"],
                 "processo": valores["PROCESSO"],
@@ -514,12 +513,11 @@ def _herdar_ids_da_versao_anterior(
     if analise_anterior is None:
         return
 
-    ids_por_registro: dict[tuple[str, str, str, str], str] = {}
-    registros_duplicados: set[tuple[str, str, str, str]] = set()
+    ids_por_registro: dict[tuple[str, str, str], str] = {}
+    registros_duplicados: set[tuple[str, str, str]] = set()
     for linha, processo_id in analise_anterior.ids_existentes.items():
         registro = analise_anterior.registros[linha]
         chave = (
-            registro["cliente"],
             registro["acabado"],
             registro["ferramental"],
             registro["processo"],
@@ -532,7 +530,6 @@ def _herdar_ids_da_versao_anterior(
     for linha in analise.linhas_sem_id:
         registro = analise.registros[linha]
         chave = (
-            registro["cliente"],
             registro["acabado"],
             registro["ferramental"],
             registro["processo"],

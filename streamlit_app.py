@@ -23,7 +23,7 @@ from core.db_utils import (
     is_cloud_runtime,
 )
 from core.excel_utils import (
-    get_acabados_for_cliente,
+    get_clientes,
     get_painting_choices,
     get_painting_process_choices,
     get_process_by_id,
@@ -45,7 +45,7 @@ st.set_page_config(
 @st.cache_data
 def load_base_choices():
     return {
-        "clientes": [v for v, _ in get_unique_choices("CLIENTE") if v],
+        "clientes": get_clientes(),
         "acabados": [v for v, _ in get_unique_choices("ACABADO") if v],
         "ferramentais": [v for v, _ in get_unique_choices("FERRAMENTAL") if v],
     }
@@ -663,12 +663,13 @@ def render_lancamento_screen():
     numero_operadores_key = form_key("numero_operadores")
     operadores_multiselect_key = form_key("operadores_multiselect")
 
+    cliente = st.selectbox("Cliente", choices["clientes"], index=None, key=cliente_key)
+
     if qr_process:
         st.success(f"Processo {qr_process['processo_id']} identificado pelo QR Code.")
         with st.container(border=True):
             left_column, right_column = st.columns(2)
             with left_column:
-                st.markdown(f"**Cliente:** {qr_process['cliente']}")
                 st.markdown(f"**Display:** {qr_process['acabado']}")
             with right_column:
                 st.markdown(f"**Ferramental:** {qr_process['ferramental']}")
@@ -679,18 +680,11 @@ def render_lancamento_screen():
             st.session_state[QR_INPUT_RESET_REQUESTED_KEY] = True
             st.rerun()
 
-        cliente = qr_process["cliente"]
         acabado = qr_process["acabado"]
         ferramental = qr_process["ferramental"]
         processo_selecionado = qr_process["processo"]
     else:
-        cliente = st.selectbox("Cliente", choices["clientes"], index=None, key=cliente_key)
-        if st.session_state.last_cliente != cliente:
-            st.session_state.pop(acabado_key, None)
-        st.session_state.last_cliente = cliente
-
-        acabado_options = get_acabados_for_cliente(cliente) if cliente else choices["acabados"]
-        acabado = st.selectbox("Display", acabado_options, index=None, key=acabado_key)
+        acabado = st.selectbox("Display", choices["acabados"], index=None, key=acabado_key)
 
         ferramental = st.selectbox("Ferramental", choices["ferramentais"], index=None, key=ferramental_key)
 
@@ -753,7 +747,6 @@ def render_lancamento_screen():
             except (OSError, ValueError) as exc:
                 st.error(f"Não foi possível validar novamente o QR: {exc}")
                 st.stop()
-            cliente = refreshed_process["cliente"]
             acabado = refreshed_process["acabado"]
             ferramental = refreshed_process["ferramental"]
             processo_selecionado = refreshed_process["processo"]
@@ -816,6 +809,11 @@ def render_lancamento_pintura_screen():
             on_detect=load_painting_qr_process,
         )
 
+    cliente = st.selectbox(
+        "Cliente", get_clientes(), index=None,
+        key=painting_form_key("cliente"),
+    )
+
     if painting_qr_process:
         st.success(
             f"Processo {painting_qr_process['processo_id']} identificado pelo QR Code."
@@ -823,7 +821,6 @@ def render_lancamento_pintura_screen():
         with st.container(border=True):
             left_column, right_column = st.columns(2)
             with left_column:
-                st.markdown(f"**Cliente:** {painting_qr_process['cliente']}")
                 st.markdown(f"**Display:** {painting_qr_process['acabado']}")
             with right_column:
                 st.markdown(f"**Ferramental:** {painting_qr_process['ferramental']}")
@@ -838,21 +835,12 @@ def render_lancamento_pintura_screen():
             st.session_state[PAINTING_QR_INPUT_RESET_REQUESTED_KEY] = True
             st.rerun()
 
-        cliente = painting_qr_process["cliente"]
         display = painting_qr_process["acabado"]
         ferramental = painting_qr_process["ferramental"]
         processo = painting_qr_process["processo"]
     else:
-        cliente = st.selectbox(
-            "Cliente", get_painting_choices("CLIENTE"), index=None,
-            key=painting_form_key("cliente"),
-        )
-        if st.session_state.last_painting_cliente != cliente:
-            for field in ("display", "ferramental", "processo"):
-                st.session_state.pop(painting_form_key(field), None)
-        st.session_state.last_painting_cliente = cliente
         display = st.selectbox(
-            "Display", get_painting_choices("ACABADO", CLIENTE=cliente), index=None,
+            "Display", get_painting_choices("ACABADO"), index=None,
             key=painting_form_key("display"),
         )
         if st.session_state.last_painting_display != display:
@@ -860,11 +848,11 @@ def render_lancamento_pintura_screen():
                 st.session_state.pop(painting_form_key(field), None)
         st.session_state.last_painting_display = display
         ferramental = st.selectbox(
-            "Ferramental", get_painting_choices("FERRAMENTAL", CLIENTE=cliente, ACABADO=display),
+            "Ferramental", get_painting_choices("FERRAMENTAL", ACABADO=display),
             index=None, key=painting_form_key("ferramental"),
         )
         processo = st.selectbox(
-            "Processo", get_painting_process_choices(cliente, display, ferramental), index=None,
+            "Processo", get_painting_process_choices(display, ferramental), index=None,
             key=painting_form_key("processo"),
         )
 
@@ -909,7 +897,6 @@ def render_lancamento_pintura_screen():
                 st.error(f"Não foi possível validar novamente o QR: {exc}")
                 st.stop()
 
-            cliente = refreshed_process["cliente"]
             display = refreshed_process["acabado"]
             ferramental = refreshed_process["ferramental"]
             processo = refreshed_process["processo"]
@@ -1088,7 +1075,7 @@ def render_ajustes_pintura_screen():
     key_base = f"{PAINTING_ADJUST_FIELD_PREFIX}{selected_entry_id}"
 
     cliente_atual = selected_entry.get("cliente")
-    cliente_options = add_current_option(get_painting_choices("CLIENTE"), cliente_atual)
+    cliente_options = add_current_option(get_clientes(), cliente_atual)
     cliente = st.selectbox(
         "Cliente",
         cliente_options,
@@ -1098,7 +1085,7 @@ def render_ajustes_pintura_screen():
 
     display_atual = selected_entry.get("display")
     display_options = add_current_option(
-        get_painting_choices("ACABADO", CLIENTE=cliente), display_atual
+        get_painting_choices("ACABADO"), display_atual
     )
     display = st.selectbox(
         "Display",
@@ -1121,7 +1108,7 @@ def render_ajustes_pintura_screen():
     ferramental_atual = selected_entry.get("maquinario")
     ferramental_options = add_current_option(
         get_painting_choices(
-            "FERRAMENTAL", CLIENTE=cliente, ACABADO=display
+            "FERRAMENTAL", ACABADO=display
         ),
         ferramental_atual,
     )
@@ -1134,7 +1121,7 @@ def render_ajustes_pintura_screen():
 
     processo_atual = selected_entry.get("processo")
     processo_options = add_current_option(
-        get_painting_process_choices(cliente, display, ferramental), processo_atual
+        get_painting_process_choices(display, ferramental), processo_atual
     )
     processo = st.selectbox(
         "Processo",
@@ -1316,7 +1303,7 @@ def render_ajustes_producao_screen():
     )
 
     acabado_atual = st.session_state.get(acabado_key, selected_entry.get("display"))
-    acabado_base_options = get_acabados_for_cliente(cliente) if cliente else choices["acabados"]
+    acabado_base_options = choices["acabados"]
     acabado_options = add_current_option(acabado_base_options, acabado_atual)
     acabado = st.selectbox(
         "Display",

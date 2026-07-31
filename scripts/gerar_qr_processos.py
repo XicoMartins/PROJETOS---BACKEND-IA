@@ -14,7 +14,6 @@ from openpyxl import load_workbook
 
 
 COLUNAS_OBRIGATORIAS = (
-    "CLIENTE",
     "ACABADO",
     "FERRAMENTAL",
     "PROCESSO",
@@ -135,7 +134,6 @@ def carregar_processos(arquivo: Path, aba: str | None = None) -> list[dict]:
             registro = {
                 "linha": numero_linha,
                 "processo_id": processo_id,
-                "cliente": str(obter("CLIENTE") or "").strip(),
                 "acabado": str(obter("ACABADO") or "").strip(),
                 "ferramental": str(obter("FERRAMENTAL") or "").strip(),
                 "processo": str(obter("PROCESSO") or "").strip(),
@@ -143,7 +141,7 @@ def carregar_processos(arquivo: Path, aba: str | None = None) -> list[dict]:
 
             campos_vazios = [
                 campo
-                for campo in ("cliente", "acabado", "ferramental", "processo")
+                for campo in ("acabado", "ferramental", "processo")
                 if not registro[campo]
             ]
             if campos_vazios:

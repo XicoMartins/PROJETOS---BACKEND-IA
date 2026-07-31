@@ -78,7 +78,6 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         worksheet = workbook.active
         worksheet.title = "PROCESSOS"
         cabecalhos = [
-            "CLIENTE",
             "ACABADO",
             "FERRAMENTAL",
             "PROCESSO",
@@ -92,7 +91,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         for celula in worksheet[1]:
             celula.fill = preenchimento
         for processo, processo_id in linhas:
-            valores = ["Cliente", "Produto", "Máquina", processo, 1, "=E2"]
+            valores = ["Produto", "Máquina", processo, 1, "=D2"]
             if incluir_id:
                 valores.append(processo_id)
             worksheet.append(valores)
@@ -118,13 +117,13 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         workbook = load_workbook(saida, data_only=False)
         try:
             worksheet = workbook["PROCESSOS"]
-            self.assertEqual(worksheet["G1"].value, "PROCESSO_ID")
-            self.assertEqual(worksheet["G2"].value, "001143")
-            self.assertEqual(worksheet["G3"].value, "001144")
-            self.assertEqual(worksheet["G2"].number_format, "@")
-            self.assertEqual(worksheet["F2"].value, "=E2")
+            self.assertEqual(worksheet["F1"].value, "PROCESSO_ID")
+            self.assertEqual(worksheet["F2"].value, "001143")
+            self.assertEqual(worksheet["F3"].value, "001144")
+            self.assertEqual(worksheet["F2"].number_format, "@")
+            self.assertEqual(worksheet["E2"].value, "=D2")
             self.assertEqual(workbook["APOIO"]["A1"].value, "CONTEÚDO PRESERVADO")
-            self.assertEqual(worksheet["G1"].fill.fgColor.rgb, worksheet["F1"].fill.fgColor.rgb)
+            self.assertEqual(worksheet["F1"].fill.fgColor.rgb, worksheet["E1"].fill.fgColor.rgb)
         finally:
             workbook.close()
         qrs = sorted((self.config.pasta_qrs / "NOVA LISTA").glob("*.png"))
@@ -180,7 +179,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         )
         workbook = load_workbook(copia_painel, data_only=False)
         try:
-            self.assertEqual(workbook["PROCESSOS"]["G2"].value, "001143")
+            self.assertEqual(workbook["PROCESSOS"]["F2"].value, "001143")
         finally:
             workbook.close()
         self.assertEqual(resultados[0].arquivos_git_painel, [copia_painel])
@@ -248,8 +247,8 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         workbook = load_workbook(alvo, data_only=False)
         try:
             worksheet = workbook["PROCESSOS"]
-            self.assertEqual(worksheet["G2"].value, "001142")
-            self.assertEqual(worksheet["G3"].value, "001143")
+            self.assertEqual(worksheet["F2"].value, "001142")
+            self.assertEqual(worksheet["F3"].value, "001143")
         finally:
             workbook.close()
 

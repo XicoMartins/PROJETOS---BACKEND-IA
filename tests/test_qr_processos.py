@@ -24,11 +24,11 @@ class GeradorQrProcessosTests(unittest.TestCase):
         workbook = Workbook()
         worksheet = workbook.active
         worksheet.append(
-            ["CLIENTE", "ACABADO", "FERRAMENTAL", "PROCESSO", "PROCESSO_ID"]
+            ["ACABADO", "FERRAMENTAL", "PROCESSO", "PROCESSO_ID"]
         )
         for indice, processo_id in enumerate(ids, start=1):
             worksheet.append(
-                ["Cliente", "Display", "Máquina", f"Processo {indice}", processo_id]
+                ["Display", "Máquina", f"Processo {indice}", processo_id]
             )
         caminho = pasta / "processos.xlsx"
         workbook.save(caminho)
@@ -74,6 +74,10 @@ class GeradorQrProcessosTests(unittest.TestCase):
             pasta = Path(pasta_temporaria)
             self.criar_planilha_nomeada(pasta, "base_a.xlsx", ("000001", "000002"))
             self.criar_planilha_nomeada(pasta, "base_b.xlsx", ("000003",))
+            clientes = Workbook()
+            clientes.active.append(["CLIENTE"])
+            clientes.active.append(["Cliente independente"])
+            clientes.save(pasta / "CLIENTES.xlsx")
             saida = pasta / "qrs"
 
             manifesto = qr_base.gerar_qrs_da_base(pasta, saida)
