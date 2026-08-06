@@ -73,7 +73,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
     def tearDown(self):
         self.temporario.cleanup()
 
-    def _criar_planilha(self, caminho, linhas, incluir_id=False):
+    def _criar_planilha(self, caminho, linhas, incluir_id=False, acabado=None):
         workbook = Workbook()
         worksheet = workbook.active
         worksheet.title = "PROCESSOS"
@@ -90,8 +90,9 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         preenchimento = PatternFill("solid", fgColor="5B9BD5")
         for celula in worksheet[1]:
             celula.fill = preenchimento
+        acabado = acabado or caminho.stem
         for processo, processo_id in linhas:
-            valores = ["Produto", "Máquina", processo, 1, "=D2"]
+            valores = [acabado, "Máquina", processo, 1, "=D2"]
             if incluir_id:
                 valores.append(processo_id)
             worksheet.append(valores)
@@ -236,6 +237,22 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         self.assertTrue(list(self.config.pasta_rejeitados.rglob("ID REPETIDO.xlsx")))
         erros = list(self.config.pasta_rejeitados.rglob("*.erro.txt"))
         self.assertIn("já usado", erros[0].read_text(encoding="utf-8"))
+
+    def test_rejeita_mesmo_acabado_em_planilha_com_outro_nome(self):
+        entrada = self.entrada_producao / "COPIA DA BASE.xlsx"
+        self._criar_planilha(
+            entrada,
+            [("Processo duplicado", None)],
+            incluir_id=False,
+            acabado="BASE ATUAL",
+        )
+
+        resultados = executar(self.config, aplicar=True, tipo="producao")
+
+        self.assertEqual(resultados[0].status, "rejeitado")
+        self.assertIn("produto acabado ja cadastrado", resultados[0].mensagem)
+        self.assertIn("BASE ATUAL.xlsx", resultados[0].mensagem)
+        self.assertFalse((self.base_producao / entrada.name).exists())
 
     def test_atualiza_planilha_preservando_ids_e_removendo_qr_obsoleto(self):
         alvo = self.base_producao / "BASE ATUAL.xlsx"

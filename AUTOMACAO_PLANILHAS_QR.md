@@ -43,6 +43,8 @@ sendo salvo, ele fica na entrada e é verificado novamente na próxima execuçã
 - IDs existentes nunca são alterados ou reutilizados.
 - A sequência é global entre produção e pintura.
 - Antes de reservar novos números, toda a base é validada contra duplicidades.
+- Um mesmo produto acabado não pode existir em duas planilhas com nomes diferentes;
+  para alterá-lo, reutilize o nome do arquivo já publicado.
 - A reserva usa uma transação SQLite e uma trava impede duas execuções simultâneas.
 - Se uma execução falhar após reservar números, pode haver um salto na sequência.
   Isso é intencional: um ID reservado nunca é reaproveitado.

@@ -16,6 +16,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import uuid
 from copy import copy
 from dataclasses import dataclass, field
@@ -294,6 +295,14 @@ def _normalizar_cabecalho(valor: object) -> str:
     return str(valor or "").strip().upper()
 
 
+def _normalizar_acabado(valor: object) -> str:
+    texto = unicodedata.normalize("NFKD", str(valor or ""))
+    sem_acentos = "".join(
+        caractere for caractere in texto if not unicodedata.combining(caractere)
+    )
+    return " ".join(sem_acentos.casefold().split())
+
+
 def analisar_planilha(arquivo: Path) -> AnalisePlanilha:
     try:
         workbook = load_workbook(arquivo, data_only=False, read_only=True)
@@ -505,6 +514,40 @@ def _ids_da_base(
     }
 
 
+def _validar_acabados_unicos(
+    destino: Destino,
+    analise: AnalisePlanilha,
+    excluir_planilha: Path | None = None,
+) -> None:
+    """Impede duas planilhas concorrentes para o mesmo produto acabado."""
+    nome_excluido = excluir_planilha.name if excluir_planilha else None
+    origens_por_acabado: dict[str, set[str]] = {}
+    for registro in carregar_base(destino.base):
+        if registro["planilha"] == nome_excluido:
+            continue
+        chave = _normalizar_acabado(registro["acabado"])
+        if chave:
+            origens_por_acabado.setdefault(chave, set()).add(registro["planilha"])
+
+    acabados_recebidos = {
+        _normalizar_acabado(registro["acabado"]): registro["acabado"]
+        for registro in analise.registros.values()
+        if _normalizar_acabado(registro["acabado"])
+    }
+    conflitos = []
+    for chave, acabado in sorted(acabados_recebidos.items()):
+        origens = sorted(origens_por_acabado.get(chave, set()))
+        if origens:
+            conflitos.append(f"{acabado}: {', '.join(origens)}")
+
+    if conflitos:
+        raise ErroValidacao(
+            "produto acabado ja cadastrado em outra planilha; atualize o arquivo "
+            "existente em vez de criar uma copia com outro nome: "
+            + "; ".join(conflitos)
+        )
+
+
 def _herdar_ids_da_versao_anterior(
     analise: AnalisePlanilha,
     analise_anterior: AnalisePlanilha | None,
@@ -602,6 +645,11 @@ def processar_arquivo(
     analise = analisar_planilha(arquivo)
     analise_anterior = analisar_planilha(alvo_planilha) if atualizacao else None
     _herdar_ids_da_versao_anterior(analise, analise_anterior)
+    _validar_acabados_unicos(
+        destino,
+        analise,
+        alvo_planilha if atualizacao else None,
+    )
 
     ids_base = _ids_da_base(config, alvo_planilha if atualizacao else None)
     for linha, processo_id in analise.ids_existentes.items():
