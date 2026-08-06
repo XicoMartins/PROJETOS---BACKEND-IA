@@ -148,6 +148,43 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         self.assertEqual(hash_antes, list(self.config.pasta_backups.rglob("SIMULACAO.xlsx"))[0].read_bytes())
         self.assertEqual(aplicacao[0].ids, ["001143"])
 
+    def test_redireciona_lista_pintura_enviada_para_producao(self):
+        entrada = self.entrada_producao / "LISTA PINTURA TESTE.xlsx"
+        self._criar_planilha(
+            entrada,
+            [("Envio à Pintura", None), ("Retorno da Pintura", None)],
+            incluir_id=False,
+        )
+        raiz_painel = self.raiz / "painel"
+        painel_producao = raiz_painel / "planilhas"
+        painel_pintura = raiz_painel / "planilhas_pintura"
+        config_painel = Configuracao(
+            **{
+                **self.config.__dict__,
+                "publicacao_painel": PublicacaoPainel(
+                    raiz_projeto=raiz_painel,
+                    bases={
+                        "producao": painel_producao,
+                        "pintura": painel_pintura,
+                    },
+                    sincronizar_github=False,
+                    branch_github="main",
+                ),
+            }
+        )
+
+        resultados = executar(config_painel, aplicar=True)
+
+        self.assertEqual(len(resultados), 1)
+        self.assertEqual(resultados[0].status, "processado")
+        self.assertEqual(resultados[0].tipo, "pintura")
+        self.assertIn("Classificada automaticamente", resultados[0].mensagem)
+        self.assertFalse((self.base_producao / entrada.name).exists())
+        self.assertTrue((self.base_pintura / entrada.name).is_file())
+        self.assertFalse((painel_producao / entrada.name).exists())
+        self.assertTrue((painel_pintura / entrada.name).is_file())
+        self.assertTrue(list(self.config.pasta_processados.rglob(entrada.name)))
+
     def test_publica_planilha_processada_no_painel(self):
         entrada = self.entrada_producao / "NOVA LISTA PAINEL.xlsx"
         self._criar_planilha(entrada, [("Corte", None)], incluir_id=False)

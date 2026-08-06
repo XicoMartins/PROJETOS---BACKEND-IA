@@ -859,6 +859,22 @@ def sincronizar_github(config: Configuracao, arquivos: Iterable[Path]) -> None:
     )
 
 
+def _destino_efetivo(
+    config: Configuracao,
+    destino_origem: Destino,
+    arquivo: Path,
+) -> Destino:
+    """Corrige automaticamente planilhas de pintura colocadas na fila de produção."""
+    if (
+        destino_origem.tipo == "producao"
+        and arquivo.stem.strip().casefold().startswith("lista pintura")
+    ):
+        return next(
+            destino for destino in config.destinos if destino.tipo == "pintura"
+        )
+    return destino_origem
+
+
 def executar(
     config: Configuracao,
     aplicar: bool,
@@ -902,17 +918,25 @@ def executar(
                     else sorted(destino.entrada.glob("*.xlsx"))
                 )
                 for arquivo in arquivos:
+                    destino_arquivo = _destino_efetivo(config, destino, arquivo)
                     try:
                         resultado = processar_arquivo(
-                            config, destino, arquivo, conexao, aplicar
+                            config, destino_arquivo, arquivo, conexao, aplicar
                         )
+                        if destino_arquivo.tipo != destino.tipo:
+                            resultado.mensagem = (
+                                "Classificada automaticamente como pintura; "
+                                + resultado.mensagem
+                            )
                     except (ErroValidacao, OSError, ValueError) as exc:
                         mensagem = str(exc)
                         if aplicar and arquivo.exists():
-                            rejeitar_arquivo(config, destino, arquivo, mensagem)
+                            rejeitar_arquivo(
+                                config, destino_arquivo, arquivo, mensagem
+                            )
                         resultado = Resultado(
                             arquivo.name,
-                            destino.tipo,
+                            destino_arquivo.tipo,
                             "rejeitado",
                             mensagem,
                             [],
