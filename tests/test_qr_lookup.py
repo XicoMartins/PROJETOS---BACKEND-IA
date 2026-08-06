@@ -26,6 +26,8 @@ class QrUtilsTests(unittest.TestCase):
 
     def test_identifies_painting_process(self):
         self.assertTrue(is_painting_process({"ferramental": " pintura "}))
+        self.assertTrue(is_painting_process({"ferramental": "Envio à Pintura"}))
+        self.assertTrue(is_painting_process({"ferramental": "Retorno da Pintura"}))
         self.assertFalse(is_painting_process({"ferramental": "Solda MIG"}))
         self.assertFalse(is_painting_process(None))
 

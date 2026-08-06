@@ -52,4 +52,5 @@ def is_painting_process(process_data: object) -> bool:
     """Indica se os dados consultados pertencem à base de pintura."""
     if not isinstance(process_data, dict):
         return False
-    return str(process_data.get("ferramental") or "").strip().upper() == "PINTURA"
+    ferramental = str(process_data.get("ferramental") or "").strip().upper()
+    return "PINTURA" in ferramental
