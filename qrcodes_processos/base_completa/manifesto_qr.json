@@ -15218,5 +15218,49 @@
     "conteudo_qr": "001484",
     "pasta_qr": "LISTA PINTURA PG + ECO HIBRIDO LADO MENOR",
     "arquivo_qr": "LISTA PINTURA PG + ECO HIBRIDO LADO MENOR/001484_PARACHOQUE_RETORNO.png"
+  },
+  {
+    "linha": 2,
+    "processo_id": "001485",
+    "acabado": "RACK PARASITA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Corpo - Envio",
+    "planilha": "LISTA PINTURA RACK PARASITA.xlsx",
+    "conteudo_qr": "001485",
+    "pasta_qr": "LISTA PINTURA RACK PARASITA",
+    "arquivo_qr": "LISTA PINTURA RACK PARASITA/001485_CORPO_ENVIO.png"
+  },
+  {
+    "linha": 3,
+    "processo_id": "001486",
+    "acabado": "RACK PARASITA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Testeira - Envio",
+    "planilha": "LISTA PINTURA RACK PARASITA.xlsx",
+    "conteudo_qr": "001486",
+    "pasta_qr": "LISTA PINTURA RACK PARASITA",
+    "arquivo_qr": "LISTA PINTURA RACK PARASITA/001486_TESTEIRA_ENVIO.png"
+  },
+  {
+    "linha": 4,
+    "processo_id": "001487",
+    "acabado": "RACK PARASITA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Corpo - Retorno",
+    "planilha": "LISTA PINTURA RACK PARASITA.xlsx",
+    "conteudo_qr": "001487",
+    "pasta_qr": "LISTA PINTURA RACK PARASITA",
+    "arquivo_qr": "LISTA PINTURA RACK PARASITA/001487_CORPO_RETORNO.png"
+  },
+  {
+    "linha": 5,
+    "processo_id": "001488",
+    "acabado": "RACK PARASITA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Testeira - Retorno",
+    "planilha": "LISTA PINTURA RACK PARASITA.xlsx",
+    "conteudo_qr": "001488",
+    "pasta_qr": "LISTA PINTURA RACK PARASITA",
+    "arquivo_qr": "LISTA PINTURA RACK PARASITA/001488_TESTEIRA_RETORNO.png"
   }
 ]
