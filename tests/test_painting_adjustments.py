@@ -4,6 +4,7 @@ import hashlib
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from core.db_utils import (
     ProductionDB,
@@ -12,10 +13,36 @@ from core.db_utils import (
 
 
 class PaintingAdjustmentsTests(unittest.TestCase):
+    def test_painting_entry_can_be_deleted(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            database_path = Path(temp_dir) / "production.db"
+            with patch("core.db_utils.get_database_url", return_value=None):
+                db = ProductionDB(db_path=str(database_path), database_url=None)
+            entry = build_painting_entry_payload_from_streamlit(
+                {
+                    "cliente": "Cliente A",
+                    "display": "Display A",
+                    "numero_display": "12345678",
+                    "codigo_pintura": "AZUL",
+                    "ferramental": "Gancho 1",
+                    "processo": "Pintura",
+                    "data_producao": "13/07/26",
+                    "hora_lancamento": "08:30",
+                    "quantidade": 10,
+                    "quantidade_total": 20,
+                },
+                "1.2",
+            )
+            entry_id = db.save_painting_entry(entry)
+
+            self.assertTrue(db.delete_painting_entry(entry_id))
+            self.assertEqual(db.get_all_painting_entries(), [])
+
     def test_painting_entry_can_be_listed_and_updated(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             database_path = Path(temp_dir) / "production.db"
-            db = ProductionDB(db_path=str(database_path), database_url=None)
+            with patch("core.db_utils.get_database_url", return_value=None):
+                db = ProductionDB(db_path=str(database_path), database_url=None)
             original = build_painting_entry_payload_from_streamlit(
                 {
                     "cliente": "Cliente A",

@@ -1005,6 +1005,63 @@ def format_painting_entry_option(entry):
     )
 
 
+def render_delete_adjustment_controls(
+    entry_id,
+    key_base,
+    delete_action,
+    success_message_key,
+    entry_label="Lançamento",
+):
+    confirmation_state_key = f"{key_base}__delete_requested"
+
+    if not st.session_state.get(confirmation_state_key):
+        if st.button(
+            "Excluir lançamento",
+            key=f"{key_base}__delete",
+            type="secondary",
+        ):
+            st.session_state[confirmation_state_key] = True
+            st.rerun()
+        return
+
+    st.warning(
+        f"Confirma a exclusão do {entry_label.lower()} #{entry_id}? "
+        "Esta ação não pode ser desfeita."
+    )
+    confirm_col, cancel_col = st.columns([1, 1])
+    with confirm_col:
+        confirm_delete = st.button(
+            "Confirmar exclusão",
+            key=f"{key_base}__confirm_delete",
+            type="primary",
+        )
+    with cancel_col:
+        cancel_delete = st.button(
+            "Cancelar",
+            key=f"{key_base}__cancel_delete",
+            type="secondary",
+        )
+
+    if cancel_delete:
+        st.session_state.pop(confirmation_state_key, None)
+        st.rerun()
+
+    if confirm_delete:
+        try:
+            deleted = delete_action(entry_id)
+        except Exception as exc:
+            st.error(f"Erro ao excluir lançamento: {exc}")
+        else:
+            if deleted:
+                st.session_state.pop(confirmation_state_key, None)
+                st.session_state[success_message_key] = (
+                    f"{entry_label} #{entry_id} excluído com sucesso."
+                )
+                st.rerun()
+            else:
+                st.error("Não foi possível encontrar esse lançamento para excluir.")
+
+
 def render_ajustes_pintura_screen():
     st.markdown('<div class="form-card">', unsafe_allow_html=True)
     st.markdown(
@@ -1013,6 +1070,8 @@ def render_ajustes_pintura_screen():
     )
 
     success_message = st.session_state.pop(PAINTING_ADJUST_SUCCESS_MESSAGE_KEY, None)
+    if success_message:
+        st.success(success_message)
     db = get_db()
     entries = db.get_all_painting_entries()
 
@@ -1155,14 +1214,19 @@ def render_ajustes_pintura_screen():
         key=f"{key_base}__quantidade_total",
     )
 
-    save_col, success_col = st.columns([1, 8])
+    save_col, delete_col = st.columns([1, 1])
     with save_col:
         salvar_ajuste = st.button(
             "Salvar ajuste", key=f"{key_base}__save_painting"
         )
-    with success_col:
-        if success_message:
-            st.success(success_message)
+    with delete_col:
+        render_delete_adjustment_controls(
+            selected_entry_id,
+            key_base,
+            db.delete_painting_entry,
+            PAINTING_ADJUST_SUCCESS_MESSAGE_KEY,
+            entry_label="Lançamento de pintura",
+        )
 
     if salvar_ajuste:
         obrigatorios = [
@@ -1226,6 +1290,8 @@ def render_ajustes_producao_screen():
     st.markdown('<div class="section-title">Ajustar lancamento anterior</div>', unsafe_allow_html=True)
 
     success_message = st.session_state.pop(ADJUST_SUCCESS_MESSAGE_KEY, None)
+    if success_message:
+        st.success(success_message)
 
     db = get_db()
     entries = db.get_all_entries()
@@ -1403,12 +1469,16 @@ def render_ajustes_producao_screen():
         key=operadores_multiselect_key,
     )
 
-    save_col, success_col = st.columns([1, 8])
+    save_col, delete_col = st.columns([1, 1])
     with save_col:
         salvar_ajuste = st.button("Salvar ajuste", key=f"{key_base}__save")
-    with success_col:
-        if success_message:
-            st.success(success_message)
+    with delete_col:
+        render_delete_adjustment_controls(
+            selected_entry_id,
+            key_base,
+            db.delete_entry,
+            ADJUST_SUCCESS_MESSAGE_KEY,
+        )
 
     if salvar_ajuste:
         erros = validate_inputs(

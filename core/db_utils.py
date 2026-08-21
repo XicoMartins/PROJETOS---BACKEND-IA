@@ -450,6 +450,16 @@ class ProductionDB:
             conn.commit()
             return cursor.rowcount > 0
 
+    def delete_painting_entry(self, entry_id: int) -> bool:
+        """Deleta um lancamento de pintura."""
+        with self.get_conn() as conn:
+            cursor = conn.execute(
+                f"DELETE FROM painting_entries WHERE id = {self.placeholder}",
+                (entry_id,),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+
     def search_entries(self, query: str) -> List[Dict]:
         """Busca registros por cliente, display ou processo."""
         search_pattern = f"%{query}%"
