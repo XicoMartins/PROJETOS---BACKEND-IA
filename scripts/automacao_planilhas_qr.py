@@ -887,12 +887,18 @@ def rejeitar_arquivo(
 
 
 def _git_raiz(raiz: Path, *argumentos: str) -> subprocess.CompletedProcess:
+    opcoes_windows = (
+        {"creationflags": subprocess.CREATE_NO_WINDOW}
+        if os.name == "nt"
+        else {}
+    )
     return subprocess.run(
         ["git", *argumentos],
         cwd=raiz,
         text=True,
         capture_output=True,
         check=True,
+        **opcoes_windows,
     )
 
 

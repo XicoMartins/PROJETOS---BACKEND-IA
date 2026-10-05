@@ -462,6 +462,19 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         self.assertEqual(eventos[0]["status"], "erro")
         self.assertEqual(eventos[0]["mensagem"], "falha de teste")
 
+    def test_git_executa_sem_abrir_janela_no_windows(self):
+        flag_sem_janela = subprocess.CREATE_NO_WINDOW
+        with (
+            patch.object(automacao.os, "name", "nt"),
+            patch.object(automacao.subprocess, "run") as executar,
+        ):
+            automacao._git_raiz(self.raiz, "status", "--porcelain")
+
+        self.assertEqual(
+            executar.call_args.kwargs.get("creationflags"),
+            flag_sem_janela,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
