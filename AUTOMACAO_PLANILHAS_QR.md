@@ -32,8 +32,10 @@ preenchida com `PROCESSO_ID` também é publicada no outro projeto:
 - pintura: `planilhas_pintura`.
 
 Antes de processar, a automação valida e atualiza os dois repositórios. Ao final,
-cria commits separados e executa o push do backend e do painel. Se qualquer um dos
-repositórios tiver alterações pendentes, o processamento não começa.
+cria commits separados e executa o push do backend e do painel. Imagens novas ou
+atualizadas em `FOTOS DISPLAY`, nos formatos `.png`, `.jpg`, `.jpeg` e `.webp`,
+são publicadas automaticamente mesmo quando não há planilha na fila. Alterações
+fora dessa pasta continuam bloqueando o processamento por segurança.
 
 Arquivos temporários do Excel (`~$...xlsx`) são ignorados. Se o arquivo ainda estiver
 sendo salvo, ele fica na entrada e é verificado novamente na próxima execução.
@@ -139,7 +141,48 @@ Após o piloto local estar validado, `github.sincronizar` pode ser alterado para
 3. adiciona somente a nova planilha, seus QRs e o manifesto;
 4. cria um commit e envia para a branch configurada.
 
-Se o repositório estiver sujo ou o `pull` falhar, nenhuma planilha é processada.
+Se houver alterações fora das pastas controladas pela automação ou o `pull` falhar,
+nenhuma planilha é processada. Uma imagem ainda sendo copiada fica aguardando o
+próximo ciclo e não gera erro.
+
+## Passo a passo para o colaborador
+
+### Antes do envio
+
+1. Confirme se a planilha é de **produção** ou **pintura**.
+2. Salve e feche a planilha no Excel antes de copiá-la.
+3. Prepare a imagem do produto em `.png`, `.jpg`, `.jpeg` ou `.webp`.
+4. Use um nome fácil de reconhecer e correspondente ao produto, por exemplo:
+   `PG BACKLIGHT MOD 6.png`.
+
+### Enviar a imagem
+
+1. Abra o projeto do painel na rede:
+   `S:\PROJETOS EM ANDAMENTO\PAINEL DE CONTROLE MTECH\PROGRAMAS\PROJETOS - PAINEL PRODUÇÃO IA`.
+2. Copie a imagem para a pasta `FOTOS DISPLAY`.
+3. Aguarde a cópia terminar. Não é necessário fazer commit ou abrir o GitHub.
+
+### Enviar a planilha
+
+- Para produção, copie a planilha fechada para:
+  `S:\PROJETOS EM ANDAMENTO\PAINEL DE CONTROLE MTECH\PROGRAMAS\PROJETOS---BACKEND-IA\automacao_qr\entrada\producao`.
+- Para pintura, copie a planilha fechada para:
+  `S:\PROJETOS EM ANDAMENTO\PAINEL DE CONTROLE MTECH\PROGRAMAS\PROJETOS---BACKEND-IA\automacao_qr\entrada\pintura`.
+
+Não copie arquivos temporários cujo nome começa com `~$`.
+
+### Conferir o resultado
+
+1. Aguarde até dois minutos.
+2. Quando o processamento terminar, a planilha sairá da pasta `entrada` e irá para
+   `automacao_qr\processados`.
+3. A planilha com os IDs, os QR Codes, a imagem e os commits serão publicados
+   automaticamente.
+4. Se a planilha for movida para `automacao_qr\rejeitados`, abra o arquivo
+   `.erro.txt` que estará ao lado dela e encaminhe a mensagem ao responsável pelo
+   sistema.
+
+O colaborador não precisa executar comandos, criar commits ou fazer push manual.
 
 ## Uso de recursos
 

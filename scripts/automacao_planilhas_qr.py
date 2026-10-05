@@ -46,6 +46,8 @@ except ModuleNotFoundError:
 
 COLUNAS_OBRIGATORIAS = ("ACABADO", "FERRAMENTAL", "PROCESSO")
 TIPOS_VALIDOS = ("producao", "pintura")
+PASTA_FOTOS_PAINEL = "FOTOS DISPLAY"
+EXTENSOES_FOTOS_PAINEL = frozenset({".png", ".jpg", ".jpeg", ".webp"})
 
 
 class ErroValidacao(ValueError):
@@ -197,10 +199,43 @@ def _agora_iso() -> str:
 
 
 def registrar_log(config: Configuracao, evento: dict) -> None:
+    config.pasta_logs.mkdir(parents=True, exist_ok=True)
     caminho = config.pasta_logs / f"automacao-{datetime.now():%Y-%m}.jsonl"
     registro = {"data_hora": _agora_iso(), **evento}
     with caminho.open("a", encoding="utf-8") as arquivo:
         arquivo.write(json.dumps(registro, ensure_ascii=False) + "\n")
+
+
+def registrar_erro_sistema(config: Configuracao, mensagem: str) -> None:
+    config.pasta_estado.mkdir(parents=True, exist_ok=True)
+    caminho_estado = config.pasta_estado / "ultimo_erro.json"
+    identificador = hashlib.sha256(mensagem.encode("utf-8")).hexdigest()
+    if caminho_estado.is_file():
+        try:
+            estado = json.loads(caminho_estado.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            estado = {}
+        if estado.get("identificador") == identificador:
+            return
+    registrar_log(
+        config,
+        {
+            "arquivo": "",
+            "tipo": "sistema",
+            "status": "erro",
+            "mensagem": mensagem,
+            "ids": [],
+            "modo": "aplicar",
+        },
+    )
+    _salvar_json_atomico(
+        caminho_estado,
+        {"identificador": identificador, "mensagem": mensagem},
+    )
+
+
+def limpar_erro_sistema(config: Configuracao) -> None:
+    (config.pasta_estado / "ultimo_erro.json").unlink(missing_ok=True)
 
 
 class TravaExecucao:
@@ -877,8 +912,81 @@ def validar_repositorio_git(raiz: Path, branch: str, descricao: str) -> None:
     _git_raiz(raiz, "pull", "--ff-only", "origin", branch)
 
 
+def _caminhos_pendentes_git(raiz: Path) -> list[str]:
+    caminhos: set[str] = set()
+    comandos = (
+        ("diff", "--name-only", "-z"),
+        ("diff", "--cached", "--name-only", "-z"),
+        ("ls-files", "--others", "--exclude-standard", "-z"),
+    )
+    for argumentos in comandos:
+        saida = _git_raiz(raiz, *argumentos).stdout
+        caminhos.update(item for item in saida.split("\0") if item)
+    return sorted(caminhos)
+
+
+def _foto_automatica_painel(raiz: Path, relativo: str) -> Path | None:
+    partes = Path(relativo.replace("\\", "/")).parts
+    if not partes or partes[0].casefold() != PASTA_FOTOS_PAINEL.casefold():
+        return None
+    caminho = raiz.joinpath(*partes)
+    if (
+        not caminho.is_file()
+        or caminho.suffix.casefold() not in EXTENSOES_FOTOS_PAINEL
+    ):
+        return None
+    return caminho
+
+
+def sincronizar_fotos_painel(config: Configuracao) -> bool:
+    publicacao = config.publicacao_painel
+    if not publicacao or not publicacao.sincronizar_github:
+        return True
+
+    pendentes = _caminhos_pendentes_git(publicacao.raiz_projeto)
+    if not pendentes:
+        return True
+
+    fotos = [
+        _foto_automatica_painel(publicacao.raiz_projeto, relativo)
+        for relativo in pendentes
+    ]
+    if any(foto is None for foto in fotos):
+        raise RuntimeError(
+            "sincronização GitHub ativada, mas o repositório do painel "
+            "possui alterações pendentes fora da pasta FOTOS DISPLAY"
+        )
+
+    arquivos = [foto for foto in fotos if foto is not None]
+    if not all(
+        _arquivo_estavel(arquivo, config.estabilidade_segundos)
+        for arquivo in arquivos
+    ):
+        return False
+
+    _git_raiz(
+        publicacao.raiz_projeto,
+        "pull",
+        "--ff-only",
+        "origin",
+        publicacao.branch_github,
+    )
+    sincronizar_repositorio_github(
+        publicacao.raiz_projeto,
+        publicacao.branch_github,
+        arquivos,
+        "painel",
+        mensagem_commit=f"Publica {len(arquivos)} imagem(ns) do painel",
+    )
+    return True
+
+
 def sincronizar_repositorio_github(
-    raiz: Path, branch: str, arquivos: Iterable[Path], descricao: str
+    raiz: Path,
+    branch: str,
+    arquivos: Iterable[Path],
+    descricao: str,
+    mensagem_commit: str | None = None,
 ) -> None:
     relativos = sorted(
         {
@@ -893,7 +1001,8 @@ def sincronizar_repositorio_github(
         raiz,
         "commit",
         "-m",
-        f"Automatiza {len(relativos)} arquivo(s) de processos no {descricao}",
+        mensagem_commit
+        or f"Automatiza {len(relativos)} arquivo(s) de processos no {descricao}",
     )
     _git_raiz(raiz, "push", "origin", branch)
 
@@ -933,6 +1042,9 @@ def executar(
     destinos = [d for d in config.destinos if tipo is None or d.tipo == tipo]
     if not destinos:
         raise ValueError(f"tipo inválido: {tipo}")
+
+    if aplicar and not sincronizar_fotos_painel(config):
+        return []
 
     ha_arquivo_na_fila = arquivo_especifico is not None or any(
         arquivo.is_file() and not arquivo.name.startswith("~$")
@@ -1052,6 +1164,7 @@ def main() -> int:
     if argumentos.arquivo and not argumentos.tipo:
         print("Erro: --arquivo requer --tipo")
         return 2
+    config: Configuracao | None = None
     try:
         config = carregar_configuracao(argumentos.config.resolve())
         resultados = executar(
@@ -1061,8 +1174,12 @@ def main() -> int:
             arquivo_especifico=argumentos.arquivo,
         )
     except Exception as exc:
+        if config is not None:
+            registrar_erro_sistema(config, str(exc))
         print(f"Erro: {exc}")
         return 1
+
+    limpar_erro_sistema(config)
 
     if not resultados:
         print("Nenhuma planilha nova encontrada.")

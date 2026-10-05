@@ -1,4 +1,6 @@
 import json
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +9,7 @@ from unittest.mock import patch
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill
 
+from scripts import automacao_planilhas_qr as automacao
 from scripts.automacao_planilhas_qr import (
     Configuracao,
     Destino,
@@ -100,6 +103,54 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         apoio["A1"] = "CONTEÚDO PRESERVADO"
         apoio["B2"] = "=1+1"
         workbook.save(caminho)
+
+    def _executar_git(self, raiz, *argumentos):
+        return subprocess.run(
+            ["git", *argumentos],
+            cwd=raiz,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def _configurar_painel_git(self, estabilidade_segundos=0):
+        raiz_painel = self.raiz / "painel"
+        raiz_painel.mkdir()
+        self._executar_git(raiz_painel, "init", "-b", "main")
+        self._executar_git(raiz_painel, "config", "user.name", "Teste MTECH")
+        self._executar_git(
+            raiz_painel, "config", "user.email", "teste@mtech.local"
+        )
+        (raiz_painel / ".gitkeep").write_text("", encoding="utf-8")
+        self._executar_git(raiz_painel, "add", ".gitkeep")
+        self._executar_git(raiz_painel, "commit", "-m", "Inicial")
+
+        remoto = self.raiz / "painel-remoto.git"
+        subprocess.run(
+            ["git", "init", "--bare", str(remoto)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self._executar_git(raiz_painel, "remote", "add", "origin", str(remoto))
+        self._executar_git(raiz_painel, "push", "-u", "origin", "main")
+
+        config = Configuracao(
+            **{
+                **self.config.__dict__,
+                "estabilidade_segundos": estabilidade_segundos,
+                "publicacao_painel": PublicacaoPainel(
+                    raiz_projeto=raiz_painel,
+                    bases={
+                        "producao": raiz_painel / "planilhas",
+                        "pintura": raiz_painel / "planilhas_pintura",
+                    },
+                    sincronizar_github=True,
+                    branch_github="main",
+                ),
+            }
+        )
+        return config, raiz_painel, remoto
 
     def test_processa_planilha_preservando_modelo_e_cria_qrs(self):
         entrada = self.entrada_producao / "NOVA LISTA.xlsx"
@@ -340,6 +391,76 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
 
         self.assertEqual(resultados, [])
         validar_git.assert_not_called()
+
+    def test_publica_imagem_do_painel_mesmo_com_fila_vazia(self):
+        config, raiz_painel, remoto = self._configurar_painel_git()
+        pasta_fotos = raiz_painel / "FOTOS DISPLAY"
+        pasta_fotos.mkdir()
+        imagem = pasta_fotos / "DISPLAY TESTE.png"
+        imagem.write_bytes(b"imagem de teste")
+
+        resultados = executar(config, aplicar=True)
+
+        self.assertEqual(resultados, [])
+        self.assertEqual(
+            self._executar_git(raiz_painel, "status", "--porcelain").stdout,
+            "",
+        )
+        self.assertEqual(
+            self._executar_git(
+                remoto,
+                "show",
+                "main:FOTOS DISPLAY/DISPLAY TESTE.png",
+            ).stdout,
+            "imagem de teste",
+        )
+
+    def test_imagem_recente_aguarda_proximo_ciclo_sem_erro(self):
+        config, raiz_painel, _ = self._configurar_painel_git(
+            estabilidade_segundos=60
+        )
+        pasta_fotos = raiz_painel / "FOTOS DISPLAY"
+        pasta_fotos.mkdir()
+        imagem = pasta_fotos / "DISPLAY COPIANDO.png"
+        imagem.write_bytes(b"ainda copiando")
+        os.utime(imagem, None)
+
+        resultados = executar(config, aplicar=True)
+
+        self.assertEqual(resultados, [])
+        self.assertIn(
+            "FOTOS DISPLAY/DISPLAY COPIANDO.png",
+            self._executar_git(
+                raiz_painel,
+                "ls-files",
+                "--others",
+                "--exclude-standard",
+            ).stdout,
+        )
+
+    def test_arquivo_fora_da_pasta_de_fotos_continua_bloqueado(self):
+        config, raiz_painel, _ = self._configurar_painel_git()
+        (raiz_painel / "arquivo-perigoso.py").write_text(
+            "print('não publicar')", encoding="utf-8"
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "alterações pendentes"):
+            executar(config, aplicar=True)
+
+    def test_erro_sistema_repetido_e_registrado_uma_unica_vez(self):
+        registrar_erro = getattr(automacao, "registrar_erro_sistema", None)
+        self.assertIsNotNone(registrar_erro)
+        registrar_erro(self.config, "falha de teste")
+        registrar_erro(self.config, "falha de teste")
+
+        arquivo_log = next(self.config.pasta_logs.glob("automacao-*.jsonl"))
+        eventos = [
+            json.loads(linha)
+            for linha in arquivo_log.read_text(encoding="utf-8").splitlines()
+        ]
+        self.assertEqual(len(eventos), 1)
+        self.assertEqual(eventos[0]["status"], "erro")
+        self.assertEqual(eventos[0]["mensagem"], "falha de teste")
 
 
 if __name__ == "__main__":
