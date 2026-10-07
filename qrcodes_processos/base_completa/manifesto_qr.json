@@ -21092,5 +21092,93 @@
     "conteudo_qr": "002018",
     "pasta_qr": "LISTA PINTURA PG BACKLIGHT MOD 7",
     "arquivo_qr": "LISTA PINTURA PG BACKLIGHT MOD 7/002018_TUBO_CURVO_LAT_DIR_RETORNO.png"
+  },
+  {
+    "linha": 2,
+    "processo_id": "002019",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "FECHAMENTO BASE - 63 X 599",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002019",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002019_FECHAMENTO_BASE_63_X_599.png"
+  },
+  {
+    "linha": 3,
+    "processo_id": "002020",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "FECHAMENTO BASE - 63 X 419",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002020",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002020_FECHAMENTO_BASE_63_X_419.png"
+  },
+  {
+    "linha": 4,
+    "processo_id": "002021",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "FECHAMENTO BASE - 63 X 119",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002021",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002021_FECHAMENTO_BASE_63_X_119.png"
+  },
+  {
+    "linha": 5,
+    "processo_id": "002022",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "FECHAMENTO BANDEJA - 419 X 599",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002022",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002022_FECHAMENTO_BANDEJA_419_X_599.png"
+  },
+  {
+    "linha": 6,
+    "processo_id": "002023",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "FECHAMENTO BANDEJA - 119 X 599",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002023",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002023_FECHAMENTO_BANDEJA_119_X_599.png"
+  },
+  {
+    "linha": 7,
+    "processo_id": "002024",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "CHAPA PARACHOQUE LD",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002024",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002024_CHAPA_PARACHOQUE_LD.png"
+  },
+  {
+    "linha": 8,
+    "processo_id": "002025",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "CHAPA PARACHOQUE LE",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002025",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002025_CHAPA_PARACHOQUE_LE.png"
+  },
+  {
+    "linha": 9,
+    "processo_id": "002026",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "CHAPA - TUBO ESPAÇADOR",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002026",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002026_CHAPA_TUBO_ESPACADOR.png"
   }
 ]
