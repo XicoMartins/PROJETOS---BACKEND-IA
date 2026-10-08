@@ -21180,5 +21180,16 @@
     "conteudo_qr": "002026",
     "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
     "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002026_CHAPA_TUBO_ESPACADOR.png"
+  },
+  {
+    "linha": 10,
+    "processo_id": "002027",
+    "acabado": "PG POWERADE MOD 1",
+    "ferramental": "Solda Mig",
+    "processo": "ESTRUTURA TUBULAR CORPO LARGO",
+    "planilha": "LISTA DE PROCESSO PG POWERADE MOD 1.xlsx",
+    "conteudo_qr": "002027",
+    "pasta_qr": "LISTA DE PROCESSO PG POWERADE MOD 1",
+    "arquivo_qr": "LISTA DE PROCESSO PG POWERADE MOD 1/002027_ESTRUTURA_TUBULAR_CORPO_LARGO.png"
   }
 ]
