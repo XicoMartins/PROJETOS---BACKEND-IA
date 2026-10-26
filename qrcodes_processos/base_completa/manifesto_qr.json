@@ -21676,5 +21676,159 @@
     "conteudo_qr": "002082",
     "pasta_qr": "LISTA PINTURA RACK AS5",
     "arquivo_qr": "LISTA PINTURA RACK AS5/002082_ARAME_TRASEIRO_RETORNO.png"
+  },
+  {
+    "linha": 2,
+    "processo_id": "002083",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Lateral Esquerda - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002083",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002083_LATERAL_ESQUERDA_ENVIO.png"
+  },
+  {
+    "linha": 3,
+    "processo_id": "002084",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Lateral Direita - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002084",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002084_LATERAL_DIREITA_ENVIO.png"
+  },
+  {
+    "linha": 4,
+    "processo_id": "002085",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Bandeja Corpo - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002085",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002085_BANDEJA_CORPO_ENVIO.png"
+  },
+  {
+    "linha": 5,
+    "processo_id": "002086",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Bandeja Superior - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002086",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002086_BANDEJA_SUPERIOR_ENVIO.png"
+  },
+  {
+    "linha": 6,
+    "processo_id": "002087",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Bandeja Base - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002087",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002087_BANDEJA_BASE_ENVIO.png"
+  },
+  {
+    "linha": 7,
+    "processo_id": "002088",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "Testeira - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002088",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002088_TESTEIRA_ENVIO.png"
+  },
+  {
+    "linha": 8,
+    "processo_id": "002089",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Envio à Pintura",
+    "processo": "X Traseiro + L - Envio",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002089",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002089_X_TRASEIRO_L_ENVIO.png"
+  },
+  {
+    "linha": 9,
+    "processo_id": "002090",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Lateral Esquerda - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002090",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002090_LATERAL_ESQUERDA_RETORNO.png"
+  },
+  {
+    "linha": 10,
+    "processo_id": "002091",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Lateral Direita - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002091",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002091_LATERAL_DIREITA_RETORNO.png"
+  },
+  {
+    "linha": 11,
+    "processo_id": "002092",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Bandeja Corpo - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002092",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002092_BANDEJA_CORPO_RETORNO.png"
+  },
+  {
+    "linha": 12,
+    "processo_id": "002093",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Bandeja Superior - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002093",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002093_BANDEJA_SUPERIOR_RETORNO.png"
+  },
+  {
+    "linha": 13,
+    "processo_id": "002094",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Bandeja Base - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002094",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002094_BANDEJA_BASE_RETORNO.png"
+  },
+  {
+    "linha": 14,
+    "processo_id": "002095",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "Testeira - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002095",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002095_TESTEIRA_RETORNO.png"
+  },
+  {
+    "linha": 15,
+    "processo_id": "002096",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Retorno da Pintura",
+    "processo": "X Traseiro + L - Retorno",
+    "planilha": "LISTA PINTURA RACK GONDOLA.xlsx",
+    "conteudo_qr": "002096",
+    "pasta_qr": "LISTA PINTURA RACK GONDOLA",
+    "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002096_X_TRASEIRO_L_RETORNO.png"
   }
 ]
