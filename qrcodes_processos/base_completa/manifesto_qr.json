@@ -5714,8 +5714,7 @@
   {
     "linha": 2,
     "processo_id": "000549",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Laser Tube",
     "processo": "30X20",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5726,8 +5725,7 @@
   {
     "linha": 3,
     "processo_id": "000550",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Laser Chapa",
     "processo": "0,9 Nest 1",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5738,8 +5736,7 @@
   {
     "linha": 4,
     "processo_id": "000551",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 1",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5750,8 +5747,7 @@
   {
     "linha": 5,
     "processo_id": "000552",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 2",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5762,8 +5758,7 @@
   {
     "linha": 6,
     "processo_id": "000553",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Serra",
     "processo": "Tubo da cunha",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5774,8 +5769,7 @@
   {
     "linha": 7,
     "processo_id": "000554",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Serra",
     "processo": "Lateral",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5786,8 +5780,7 @@
   {
     "linha": 8,
     "processo_id": "000555",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Serra",
     "processo": "Testeira",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5798,8 +5791,7 @@
   {
     "linha": 9,
     "processo_id": "000556",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Arames",
     "processo": "Aparador maior bdj",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5810,8 +5802,7 @@
   {
     "linha": 10,
     "processo_id": "000557",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Arames",
     "processo": "Aparador menor bdj",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5822,8 +5813,7 @@
   {
     "linha": 11,
     "processo_id": "000558",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Arames",
     "processo": "Cesto",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5834,8 +5824,7 @@
   {
     "linha": 12,
     "processo_id": "000559",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Arames",
     "processo": "Arame X",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5846,8 +5835,7 @@
   {
     "linha": 13,
     "processo_id": "000560",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Arames",
     "processo": "Arame  testeira",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5858,8 +5846,7 @@
   {
     "linha": 14,
     "processo_id": "000561",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Tubos",
     "processo": "Testeira",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5870,8 +5857,7 @@
   {
     "linha": 15,
     "processo_id": "000562",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Tubos",
     "processo": "Lateral",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5882,8 +5868,7 @@
   {
     "linha": 16,
     "processo_id": "000563",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Canaleta lateral J 1000mm",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5894,8 +5879,7 @@
   {
     "linha": 17,
     "processo_id": "000564",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Canaleta lateral J 280mm",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5906,8 +5890,7 @@
   {
     "linha": 18,
     "processo_id": "000565",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Canaleta testeira U 80mm",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5918,8 +5901,7 @@
   {
     "linha": 19,
     "processo_id": "000566",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Canaleta testeira U 300mm",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5930,8 +5912,7 @@
   {
     "linha": 20,
     "processo_id": "000567",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "L arte lateral e testeira",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5942,8 +5923,7 @@
   {
     "linha": 21,
     "processo_id": "000568",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Precificador cesto",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5954,8 +5934,7 @@
   {
     "linha": 22,
     "processo_id": "000569",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Precificador bdj",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5966,8 +5945,7 @@
   {
     "linha": 23,
     "processo_id": "000570",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Bandeja",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5978,8 +5956,7 @@
   {
     "linha": 24,
     "processo_id": "000571",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Chapa dobrada cesto LE",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -5990,8 +5967,7 @@
   {
     "linha": 25,
     "processo_id": "000572",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Chapa dobrada cesto LD",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6002,8 +5978,7 @@
   {
     "linha": 26,
     "processo_id": "000573",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Base",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6014,8 +5989,7 @@
   {
     "linha": 27,
     "processo_id": "000574",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Testeira",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6026,8 +6000,7 @@
   {
     "linha": 28,
     "processo_id": "000575",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Chapa no arame X",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6038,8 +6011,7 @@
   {
     "linha": 29,
     "processo_id": "000576",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Lateral direita",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6050,8 +6022,7 @@
   {
     "linha": 30,
     "processo_id": "000577",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Lateral esquerda",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6062,8 +6033,7 @@
   {
     "linha": 31,
     "processo_id": "000578",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Precificador cesto",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6074,8 +6044,7 @@
   {
     "linha": 32,
     "processo_id": "000579",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Cunha no tubo",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6086,8 +6055,7 @@
   {
     "linha": 33,
     "processo_id": "000580",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Tubo da cunha bdj",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6098,8 +6066,7 @@
   {
     "linha": 34,
     "processo_id": "000581",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Tubo da cunha cesto",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6110,8 +6077,7 @@
   {
     "linha": 35,
     "processo_id": "000582",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Aparador e precificador bdj",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -6122,8 +6088,7 @@
   {
     "linha": 36,
     "processo_id": "000583",
-    "cliente": "ANDINA",
-    "acabado": "RACK RETORNAVEL AS5",
+    "acabado": "RACK AS5",
     "ferramental": "Solda Mig",
     "processo": "Arame bdj",
     "planilha": "LISTA DE PROCESSO RACK AS5.xlsx",
@@ -7118,7 +7083,6 @@
   {
     "linha": 2,
     "processo_id": "000666",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "70X30 Nest 1",
@@ -7130,7 +7094,6 @@
   {
     "linha": 3,
     "processo_id": "000667",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "15X15 Nest 1",
@@ -7142,7 +7105,6 @@
   {
     "linha": 4,
     "processo_id": "000668",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "15X15 Nest 2",
@@ -7154,7 +7116,6 @@
   {
     "linha": 5,
     "processo_id": "000669",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "15X15 Nest 3",
@@ -7166,7 +7127,6 @@
   {
     "linha": 6,
     "processo_id": "000670",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "15X15 Nest 4",
@@ -7178,7 +7138,6 @@
   {
     "linha": 7,
     "processo_id": "000671",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "15X15 Nest 5",
@@ -7190,7 +7149,6 @@
   {
     "linha": 8,
     "processo_id": "000672",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "30X20 Nest 1",
@@ -7202,7 +7160,6 @@
   {
     "linha": 9,
     "processo_id": "000673",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Tube",
     "processo": "30X20 Nest 2",
@@ -7214,7 +7171,6 @@
   {
     "linha": 10,
     "processo_id": "000674",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 1",
@@ -7226,7 +7182,6 @@
   {
     "linha": 11,
     "processo_id": "000675",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 2",
@@ -7238,7 +7193,6 @@
   {
     "linha": 12,
     "processo_id": "000676",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 3",
@@ -7250,7 +7204,6 @@
   {
     "linha": 13,
     "processo_id": "000677",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 4",
@@ -7262,7 +7215,6 @@
   {
     "linha": 14,
     "processo_id": "000678",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 5",
@@ -7274,7 +7226,6 @@
   {
     "linha": 15,
     "processo_id": "000679",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 6",
@@ -7286,7 +7237,6 @@
   {
     "linha": 16,
     "processo_id": "000680",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 7",
@@ -7298,7 +7248,6 @@
   {
     "linha": 17,
     "processo_id": "000681",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 8",
@@ -7310,7 +7259,6 @@
   {
     "linha": 18,
     "processo_id": "000682",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 9",
@@ -7322,7 +7270,6 @@
   {
     "linha": 19,
     "processo_id": "000683",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 10",
@@ -7334,7 +7281,6 @@
   {
     "linha": 20,
     "processo_id": "000684",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 11",
@@ -7346,7 +7292,6 @@
   {
     "linha": 21,
     "processo_id": "000685",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 12",
@@ -7358,7 +7303,6 @@
   {
     "linha": 22,
     "processo_id": "000686",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,75 Nest 13",
@@ -7370,7 +7314,6 @@
   {
     "linha": 23,
     "processo_id": "000687",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,9 Nest 1",
@@ -7382,7 +7325,6 @@
   {
     "linha": 24,
     "processo_id": "000688",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,9 Nest 2",
@@ -7394,7 +7336,6 @@
   {
     "linha": 25,
     "processo_id": "000689",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,9 Nest 3",
@@ -7406,7 +7347,6 @@
   {
     "linha": 26,
     "processo_id": "000690",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "0,9 Nest 4",
@@ -7418,7 +7358,6 @@
   {
     "linha": 27,
     "processo_id": "000691",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "1,2 Nest 1",
@@ -7430,7 +7369,6 @@
   {
     "linha": 28,
     "processo_id": "000692",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "1,2 Nest 2",
@@ -7442,7 +7380,6 @@
   {
     "linha": 29,
     "processo_id": "000693",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 1",
@@ -7454,7 +7391,6 @@
   {
     "linha": 30,
     "processo_id": "000694",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 2",
@@ -7466,7 +7402,6 @@
   {
     "linha": 31,
     "processo_id": "000695",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 3",
@@ -7478,7 +7413,6 @@
   {
     "linha": 32,
     "processo_id": "000696",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 4",
@@ -7490,7 +7424,6 @@
   {
     "linha": 33,
     "processo_id": "000697",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 5",
@@ -7502,7 +7435,6 @@
   {
     "linha": 34,
     "processo_id": "000698",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 6",
@@ -7514,7 +7446,6 @@
   {
     "linha": 35,
     "processo_id": "000699",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Laser Chapa",
     "processo": "2,65 Nest 7",
@@ -7526,7 +7457,6 @@
   {
     "linha": 36,
     "processo_id": "000700",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Guilhotina",
     "processo": "U Testeira 950mm",
@@ -7538,7 +7468,6 @@
   {
     "linha": 37,
     "processo_id": "000701",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Guilhotina",
     "processo": "U Inferior 276mm",
@@ -7550,7 +7479,6 @@
   {
     "linha": 38,
     "processo_id": "000702",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Guilhotina",
     "processo": "U Lateral 1675mm",
@@ -7562,7 +7490,6 @@
   {
     "linha": 39,
     "processo_id": "000703",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Guilhotina",
     "processo": "U Traseiro 1900mm",
@@ -7574,7 +7501,6 @@
   {
     "linha": 40,
     "processo_id": "000704",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Arames",
     "processo": "Trecho Reto X",
@@ -7586,7 +7512,6 @@
   {
     "linha": 41,
     "processo_id": "000705",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "U Testeira 950mm",
@@ -7598,7 +7523,6 @@
   {
     "linha": 42,
     "processo_id": "000706",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "U Traseiro 1900mm",
@@ -7610,7 +7534,6 @@
   {
     "linha": 43,
     "processo_id": "000707",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "U Inferior 276mm",
@@ -7622,7 +7545,6 @@
   {
     "linha": 44,
     "processo_id": "000708",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "U Lateral 1675mm",
@@ -7634,7 +7556,6 @@
   {
     "linha": 45,
     "processo_id": "000709",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Testeira Encaixe",
@@ -7646,7 +7567,6 @@
   {
     "linha": 46,
     "processo_id": "000710",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "BT Chapa - Lx",
@@ -7658,7 +7578,6 @@
   {
     "linha": 47,
     "processo_id": "000711",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Fundo",
@@ -7670,7 +7589,6 @@
   {
     "linha": 48,
     "processo_id": "000712",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Bandeja Base",
@@ -7682,7 +7600,6 @@
   {
     "linha": 49,
     "processo_id": "000713",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Bandeja Superior",
@@ -7694,7 +7611,6 @@
   {
     "linha": 50,
     "processo_id": "000714",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Bandeja Pequena",
@@ -7706,7 +7622,6 @@
   {
     "linha": 51,
     "processo_id": "000715",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Dobradeira de Chapas",
     "processo": "Parachoque",
@@ -7718,7 +7633,6 @@
   {
     "linha": 52,
     "processo_id": "000716",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Solda Mig",
     "processo": "Lateral Esquerda Completa",
@@ -7730,7 +7644,6 @@
   {
     "linha": 53,
     "processo_id": "000717",
-    "cliente": "ANDINA",
     "acabado": "RACK GONDOLA",
     "ferramental": "Solda Mig",
     "processo": "Lateral Direita Completa",
@@ -21576,5 +21489,38 @@
     "conteudo_qr": "002062",
     "pasta_qr": "LISTA DE PROCESSO RACK SL FLEX 3BDJ",
     "arquivo_qr": "LISTA DE PROCESSO RACK SL FLEX 3BDJ/002062_BANDEJA_ORELHA.png"
+  },
+  {
+    "linha": 54,
+    "processo_id": "002066",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Solda Mig",
+    "processo": "Bandeja Corpo tubo + mão francesa",
+    "planilha": "LISTA DE PROCESSO RACK GONDOLA.xlsx",
+    "conteudo_qr": "002066",
+    "pasta_qr": "LISTA DE PROCESSO RACK GONDOLA",
+    "arquivo_qr": "LISTA DE PROCESSO RACK GONDOLA/002066_BANDEJA_CORPO_TUBO_MAO_FRANCESA.png"
+  },
+  {
+    "linha": 55,
+    "processo_id": "002067",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Solda Mig",
+    "processo": "Bandeja Superior tubo + mão francesa",
+    "planilha": "LISTA DE PROCESSO RACK GONDOLA.xlsx",
+    "conteudo_qr": "002067",
+    "pasta_qr": "LISTA DE PROCESSO RACK GONDOLA",
+    "arquivo_qr": "LISTA DE PROCESSO RACK GONDOLA/002067_BANDEJA_SUPERIOR_TUBO_MAO_FRANCESA.png"
+  },
+  {
+    "linha": 56,
+    "processo_id": "002068",
+    "acabado": "RACK GONDOLA",
+    "ferramental": "Solda Mig",
+    "processo": "Bandeja Base tubo + mão francesa",
+    "planilha": "LISTA DE PROCESSO RACK GONDOLA.xlsx",
+    "conteudo_qr": "002068",
+    "pasta_qr": "LISTA DE PROCESSO RACK GONDOLA",
+    "arquivo_qr": "LISTA DE PROCESSO RACK GONDOLA/002068_BANDEJA_BASE_TUBO_MAO_FRANCESA.png"
   }
 ]
