@@ -462,6 +462,38 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         self.assertEqual(eventos[0]["status"], "erro")
         self.assertEqual(eventos[0]["mensagem"], "falha de teste")
 
+    def test_trava_orfa_de_processo_inexistente_e_recuperada(self):
+        caminho = self.config.pasta_estado / "automacao.lock"
+        caminho.parent.mkdir(parents=True, exist_ok=True)
+        caminho.write_text(
+            "pid=99999999 data=2026-10-26T12:43:24-03:00",
+            encoding="utf-8",
+        )
+
+        with automacao.TravaExecucao(caminho):
+            self.assertIn(f"pid={os.getpid()}", caminho.read_text(encoding="utf-8"))
+
+        self.assertFalse(caminho.exists())
+
+    def test_git_desativa_manutencao_automatica_na_execucao(self):
+        with patch.object(automacao.subprocess, "run") as executar:
+            automacao._git_raiz(self.raiz, "pull", "--ff-only", "origin", "main")
+
+        self.assertEqual(
+            executar.call_args.args[0],
+            [
+                "git",
+                "-c",
+                "maintenance.auto=false",
+                "-c",
+                "gc.auto=0",
+                "pull",
+                "--ff-only",
+                "origin",
+                "main",
+            ],
+        )
+
     def test_git_executa_sem_abrir_janela_no_windows(self):
         flag_sem_janela = subprocess.CREATE_NO_WINDOW
         with (

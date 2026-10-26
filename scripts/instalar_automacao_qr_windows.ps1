@@ -28,7 +28,7 @@ $Gatilho = New-ScheduledTaskTrigger -Once -At $Inicio `
 $Configuracoes = New-ScheduledTaskSettingsSet `
     -MultipleInstances IgnoreNew `
     -StartWhenAvailable `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
+    -ExecutionTimeLimit (New-TimeSpan -Minutes 30)
 
 if ($ExecutarSemLogin) {
     $Credencial = Get-Credential -Message "Conta Windows com acesso à pasta do projeto"

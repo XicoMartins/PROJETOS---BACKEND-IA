@@ -8,6 +8,7 @@ memória enquanto a máquina está ociosa.
 from __future__ import annotations
 
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -244,20 +245,57 @@ class TravaExecucao:
         self.descritor: int | None = None
 
     def __enter__(self):
-        try:
-            self.descritor = os.open(
-                self.caminho,
-                os.O_CREAT | os.O_EXCL | os.O_WRONLY,
-            )
-        except FileExistsError as exc:
-            raise RuntimeError("A automação já está sendo executada") from exc
+        for tentativa in range(2):
+            try:
+                self.descritor = os.open(
+                    self.caminho,
+                    os.O_CREAT | os.O_EXCL | os.O_WRONLY,
+                )
+                break
+            except FileExistsError as exc:
+                if tentativa == 0 and self._remover_se_orfa():
+                    continue
+                raise RuntimeError("A automação já está sendo executada") from exc
         os.write(self.descritor, f"pid={os.getpid()} data={_agora_iso()}".encode())
         return self
+
+    def _remover_se_orfa(self) -> bool:
+        try:
+            conteudo = self.caminho.read_text(encoding="utf-8")
+            pid = int(conteudo.split(maxsplit=1)[0].removeprefix("pid="))
+        except (FileNotFoundError, ValueError, IndexError):
+            return False
+        if _processo_ativo(pid):
+            return False
+        try:
+            self.caminho.unlink()
+        except FileNotFoundError:
+            pass
+        return True
 
     def __exit__(self, *_):
         if self.descritor is not None:
             os.close(self.descritor)
         self.caminho.unlink(missing_ok=True)
+
+
+def _processo_ativo(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.OpenProcess(0x1000, False, pid)
+        if handle:
+            kernel32.CloseHandle(handle)
+            return True
+        return kernel32.GetLastError() == 5
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 def _hash_arquivo(caminho: Path) -> str:
@@ -893,7 +931,14 @@ def _git_raiz(raiz: Path, *argumentos: str) -> subprocess.CompletedProcess:
         else {}
     )
     return subprocess.run(
-        ["git", *argumentos],
+        [
+            "git",
+            "-c",
+            "maintenance.auto=false",
+            "-c",
+            "gc.auto=0",
+            *argumentos,
+        ],
         cwd=raiz,
         text=True,
         capture_output=True,
