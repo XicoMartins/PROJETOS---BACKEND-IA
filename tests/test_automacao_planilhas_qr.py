@@ -415,6 +415,40 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
             "imagem de teste",
         )
 
+    def test_publica_renomeacao_de_imagem_do_painel(self):
+        config, raiz_painel, remoto = self._configurar_painel_git()
+        pasta_fotos = raiz_painel / "FOTOS DISPLAY"
+        pasta_fotos.mkdir()
+        imagem_antiga = pasta_fotos / "1.png"
+        imagem_antiga.write_bytes(b"imagem do rack")
+        self._executar_git(raiz_painel, "add", "FOTOS DISPLAY/1.png")
+        self._executar_git(raiz_painel, "commit", "-m", "Adiciona foto")
+        self._executar_git(raiz_painel, "push", "origin", "main")
+        imagem_antiga.rename(pasta_fotos / "RACK AS5.png")
+
+        resultados = executar(config, aplicar=True)
+
+        self.assertEqual(resultados, [])
+        self.assertEqual(
+            self._executar_git(raiz_painel, "status", "--porcelain").stdout,
+            "",
+        )
+        self.assertEqual(
+            self._executar_git(
+                remoto,
+                "show",
+                "main:FOTOS DISPLAY/RACK AS5.png",
+            ).stdout,
+            "imagem do rack",
+        )
+        arquivo_antigo = subprocess.run(
+            ["git", "cat-file", "-e", "main:FOTOS DISPLAY/1.png"],
+            cwd=remoto,
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(arquivo_antigo.returncode, 0)
+
     def test_imagem_recente_aguarda_proximo_ciclo_sem_erro(self):
         config, raiz_painel, _ = self._configurar_painel_git(
             estabilidade_segundos=60

@@ -981,10 +981,9 @@ def _foto_automatica_painel(raiz: Path, relativo: str) -> Path | None:
     if not partes or partes[0].casefold() != PASTA_FOTOS_PAINEL.casefold():
         return None
     caminho = raiz.joinpath(*partes)
-    if (
-        not caminho.is_file()
-        or caminho.suffix.casefold() not in EXTENSOES_FOTOS_PAINEL
-    ):
+    if caminho.suffix.casefold() not in EXTENSOES_FOTOS_PAINEL:
+        return None
+    if caminho.exists() and not caminho.is_file():
         return None
     return caminho
 
@@ -1012,6 +1011,7 @@ def sincronizar_fotos_painel(config: Configuracao) -> bool:
     if not all(
         _arquivo_estavel(arquivo, config.estabilidade_segundos)
         for arquivo in arquivos
+        if arquivo.is_file()
     ):
         return False
 
