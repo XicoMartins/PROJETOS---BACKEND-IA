@@ -21855,5 +21855,82 @@
     "conteudo_qr": "002164",
     "pasta_qr": "LISTA PINTURA RACK GONDOLA",
     "arquivo_qr": "LISTA PINTURA RACK GONDOLA/002164_CHAPA_FUNDO_RETORNO.png"
+  },
+  {
+    "linha": 2,
+    "processo_id": "002165",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "Precificador",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002165",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002165_PRECIFICADOR.png"
+  },
+  {
+    "linha": 3,
+    "processo_id": "002166",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "Bandeja Grande",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002166",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002166_BANDEJA_GRANDE.png"
+  },
+  {
+    "linha": 4,
+    "processo_id": "002167",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "Bandeja Pequena",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002167",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002167_BANDEJA_PEQUENA.png"
+  },
+  {
+    "linha": 5,
+    "processo_id": "002168",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "J 1065 mm Testeira",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002168",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002168_J_1065_MM_TESTEIRA.png"
+  },
+  {
+    "linha": 6,
+    "processo_id": "002169",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "J 420 mm Testeira",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002169",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002169_J_420_MM_TESTEIRA.png"
+  },
+  {
+    "linha": 7,
+    "processo_id": "002170",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "J 650 mm Lateral",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002170",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002170_J_650_MM_LATERAL.png"
+  },
+  {
+    "linha": 8,
+    "processo_id": "002171",
+    "acabado": "RACK ARAMADO MISTO",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "J 480 mm Lateral",
+    "planilha": "LISTA DE PROCESSO RACK ARAMADO MISTO.xlsx",
+    "conteudo_qr": "002171",
+    "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
+    "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002171_J_480_MM_LATERAL.png"
   }
 ]
