@@ -21932,5 +21932,27 @@
     "conteudo_qr": "002171",
     "pasta_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO",
     "arquivo_qr": "LISTA DE PROCESSO RACK ARAMADO MISTO/002171_J_480_MM_LATERAL.png"
+  },
+  {
+    "linha": 2,
+    "processo_id": "002172",
+    "acabado": "RACK CROSS",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "Bandeja Dobra",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002172",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002172_BANDEJA_DOBRA.png"
+  },
+  {
+    "linha": 3,
+    "processo_id": "002173",
+    "acabado": "RACK CROSS",
+    "ferramental": "Dobradeira de Chapas",
+    "processo": "Jota 930mm",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002173",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002173_JOTA_930MM.png"
   }
 ]
