@@ -21954,5 +21954,38 @@
     "conteudo_qr": "002173",
     "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
     "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002173_JOTA_930MM.png"
+  },
+  {
+    "linha": 4,
+    "processo_id": "002174",
+    "acabado": "RACK CROSS",
+    "ferramental": "Solda Mig",
+    "processo": "Lateral Direita",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002174",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002174_LATERAL_DIREITA.png"
+  },
+  {
+    "linha": 5,
+    "processo_id": "002175",
+    "acabado": "RACK CROSS",
+    "ferramental": "Solda Mig",
+    "processo": "Lateral Esquerda",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002175",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002175_LATERAL_ESQUERDA.png"
+  },
+  {
+    "linha": 6,
+    "processo_id": "002176",
+    "acabado": "RACK CROSS",
+    "ferramental": "Solda Ponto",
+    "processo": "Bandeja Orelha",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002176",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002176_BANDEJA_ORELHA.png"
   }
 ]
