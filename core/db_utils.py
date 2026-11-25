@@ -123,6 +123,7 @@ class ProductionDB:
 
     def _init_sqlite_schema(self):
         with self.get_conn() as conn:
+            conn.execute("BEGIN IMMEDIATE")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS production_entries (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -163,6 +164,7 @@ class ProductionDB:
                     display TEXT,
                     numero_display TEXT,
                     codigo_pintura TEXT,
+                    fornecedor_pintura TEXT,
                     maquinario TEXT,
                     processo TEXT,
                     data_producao TEXT,
@@ -173,6 +175,11 @@ class ProductionDB:
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            painting_columns = {
+                row["name"] for row in conn.execute("PRAGMA table_info(painting_entries)")
+            }
+            if "fornecedor_pintura" not in painting_columns:
+                conn.execute("ALTER TABLE painting_entries ADD COLUMN fornecedor_pintura TEXT")
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_painting_timestamp
                 ON painting_entries(timestamp DESC)
@@ -222,6 +229,7 @@ class ProductionDB:
                         display TEXT,
                         numero_display TEXT,
                         codigo_pintura TEXT,
+                        fornecedor_pintura TEXT,
                         maquinario TEXT,
                         processo TEXT,
                         data_producao TEXT,
@@ -298,15 +306,16 @@ class ProductionDB:
         """Salva um novo lancamento de pintura sem misturar com a producao."""
         columns = """
             schema_version, timestamp, cliente, display, numero_display,
-            codigo_pintura, maquinario, processo, data_producao,
+            codigo_pintura, fornecedor_pintura, maquinario, processo, data_producao,
             hora_lancamento, quantidade, quantidade_total, source_hash
         """
         values = (
             data.get("schema_version"), data.get("timestamp"), data.get("cliente"),
             data.get("display"), data.get("numero_display"), data.get("codigo_pintura"),
-            data.get("maquinario"), data.get("processo"), data.get("data_producao"),
-            data.get("hora_lancamento"), data.get("quantidade", 0),
-            data.get("quantidade_total", 0), data.get("source_hash"),
+            data.get("fornecedor_pintura"), data.get("maquinario"), data.get("processo"),
+            data.get("data_producao"), data.get("hora_lancamento"),
+            data.get("quantidade", 0), data.get("quantidade_total", 0),
+            data.get("source_hash"),
         )
         placeholders = ", ".join([self.placeholder] * len(values))
 
@@ -418,6 +427,7 @@ class ProductionDB:
                 UPDATE painting_entries SET
                     cliente = {ph}, display = {ph}, numero_display = {ph},
                     codigo_pintura = {ph}, maquinario = {ph}, processo = {ph},
+                    fornecedor_pintura = CASE WHEN {ph} THEN {ph} ELSE fornecedor_pintura END,
                     data_producao = {ph}, hora_lancamento = {ph},
                     quantidade = {ph}, quantidade_total = {ph}, source_hash = {ph}
                 WHERE id = {ph}
@@ -429,6 +439,8 @@ class ProductionDB:
                     data.get("codigo_pintura"),
                     data.get("maquinario"),
                     data.get("processo"),
+                    "fornecedor_pintura" in data,
+                    data.get("fornecedor_pintura"),
                     data.get("data_producao"),
                     data.get("hora_lancamento"),
                     data.get("quantidade"),
@@ -611,7 +623,15 @@ def build_painting_entry_payload_from_streamlit(
         "quantidade": _normalize_int(payload.get("quantidade")) or 0,
         "quantidade_total": _normalize_int(payload.get("quantidade_total")) or 0,
     }
+    fornecedor_pintura = _normalize_text(
+        payload.get("fornecedor_pintura", existing_entry.get("fornecedor_pintura"))
+    ) or None
+    if fornecedor_pintura is not None:
+        entry_payload["fornecedor_pintura"] = fornecedor_pintura
+    # Registros sem fornecedor mantêm o formato original do hash.
     entry_payload["source_hash"] = _build_painting_source_hash(entry_payload)
+    if fornecedor_pintura is None and "fornecedor_pintura" in payload:
+        entry_payload["fornecedor_pintura"] = None
     return entry_payload
 
 

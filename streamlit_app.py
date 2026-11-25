@@ -52,6 +52,7 @@ def load_base_choices():
 
 SCHEMA_VERSION = "1.2"
 PROCESSO_OUTRO = "__PROCESSO_OUTRO__"
+PAINTING_SUPPLIERS = ("SCHUNCK", "Aquapint", "Multipint")
 AUTH_SESSION_KEY = "auth_authenticated"
 AUTH_USER_KEY = "auth_user"
 SAVE_SUCCESS_MESSAGE_KEY = "save_success_message"
@@ -519,6 +520,7 @@ def load_painting_qr_process(raw_value) -> None:
         st.session_state.last_painting_cliente = None
         st.session_state.last_painting_display = None
     finally:
+        st.session_state.pop(painting_form_key("fornecedor_pintura"), None)
         st.session_state[PAINTING_QR_INPUT_RESET_REQUESTED_KEY] = True
 
 
@@ -832,6 +834,7 @@ def render_lancamento_pintura_screen():
         ):
             st.session_state.pop(PAINTING_QR_CONTEXT_KEY, None)
             st.session_state.pop(PAINTING_QR_ERROR_KEY, None)
+            st.session_state.pop(painting_form_key("fornecedor_pintura"), None)
             st.session_state[PAINTING_QR_INPUT_RESET_REQUESTED_KEY] = True
             st.rerun()
 
@@ -860,6 +863,10 @@ def render_lancamento_pintura_screen():
         "Codigo (8 digitos)", max_chars=8, key=painting_form_key("numero_display"),
     )
     codigo_pintura = st.text_input("Código pintura", key=painting_form_key("codigo_pintura"))
+    fornecedor_pintura = st.selectbox(
+        "Fornecedor de pintura", PAINTING_SUPPLIERS, index=None,
+        key=painting_form_key("fornecedor_pintura"),
+    )
     data_producao = st.date_input(
         "Data", value=date.today(), format="DD/MM/YYYY", key=painting_form_key("data_producao"),
     )
@@ -906,6 +913,8 @@ def render_lancamento_pintura_screen():
             (codigo_pintura, "Código pintura"), (ferramental, "Ferramental"), (processo, "Processo"),
         ]
         erros = [f"{label} obrigatorio." for value, label in obrigatorios if not value]
+        if fornecedor_pintura not in PAINTING_SUPPLIERS:
+            erros.append("Fornecedor de pintura obrigatório. Selecione uma das opções.")
         if numero_display and not re.fullmatch(r"\d{8}", str(numero_display).strip()):
             erros.append("Codigo deve ter 8 digitos.")
         if hora_lancamento is None:
@@ -921,6 +930,7 @@ def render_lancamento_pintura_screen():
                 "display": display,
                 "numero_display": numero_display,
                 "codigo_pintura": codigo_pintura,
+                "fornecedor_pintura": fornecedor_pintura,
                 "ferramental": ferramental,
                 "processo": processo,
                 "data_producao": data_producao.strftime("%d/%m/%y"),
@@ -1104,6 +1114,7 @@ def render_ajustes_pintura_screen():
         "display",
         "numero_display",
         "codigo_pintura",
+        "fornecedor_pintura",
         "maquinario",
         "processo",
         "quantidade",
@@ -1162,6 +1173,12 @@ def render_ajustes_pintura_screen():
         "Código pintura",
         value=normalize_text(selected_entry.get("codigo_pintura")),
         key=f"{key_base}__codigo_pintura",
+    )
+    fornecedor_atual = selected_entry.get("fornecedor_pintura")
+    fornecedor_pintura = st.selectbox(
+        "Fornecedor de pintura", PAINTING_SUPPLIERS,
+        index=option_index(PAINTING_SUPPLIERS, fornecedor_atual),
+        key=f"{key_base}__fornecedor_pintura",
     )
 
     ferramental_atual = selected_entry.get("maquinario")
@@ -1240,6 +1257,8 @@ def render_ajustes_pintura_screen():
         erros = [
             f"{label} obrigatório." for value, label in obrigatorios if not value
         ]
+        if fornecedor_atual and fornecedor_pintura is None:
+            erros.append("Fornecedor de pintura obrigatório. Selecione uma das opções.")
         if numero_display and not re.fullmatch(
             r"\d{8}", str(numero_display).strip()
         ):
@@ -1257,6 +1276,7 @@ def render_ajustes_pintura_screen():
                 "display": display,
                 "numero_display": numero_display,
                 "codigo_pintura": codigo_pintura,
+                "fornecedor_pintura": fornecedor_pintura,
                 "ferramental": ferramental,
                 "processo": processo,
                 "data_producao": data_producao.strftime("%d/%m/%y"),
