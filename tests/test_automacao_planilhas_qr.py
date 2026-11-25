@@ -415,6 +415,29 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
             "imagem de teste",
         )
 
+    def test_publica_imagem_de_processo_sem_bloquear_fila(self):
+        config, raiz_painel, remoto = self._configurar_painel_git()
+        pasta_fotos = raiz_painel / "IMAGENS PROCESSOS"
+        pasta_fotos.mkdir()
+        imagem = pasta_fotos / "DISPLAY TESTE.png"
+        imagem.write_bytes(b"imagem de teste")
+
+        resultados = executar(config, aplicar=True)
+
+        self.assertEqual(resultados, [])
+        self.assertEqual(
+            self._executar_git(raiz_painel, "status", "--porcelain").stdout,
+            "",
+        )
+        self.assertEqual(
+            self._executar_git(
+                remoto,
+                "show",
+                "main:IMAGENS PROCESSOS/DISPLAY TESTE.png",
+            ).stdout,
+            "imagem de teste",
+        )
+
     def test_publica_renomeacao_de_imagem_do_painel(self):
         config, raiz_painel, remoto = self._configurar_painel_git()
         pasta_fotos = raiz_painel / "FOTOS DISPLAY"

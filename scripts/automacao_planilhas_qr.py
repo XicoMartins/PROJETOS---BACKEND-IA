@@ -978,7 +978,7 @@ def _caminhos_pendentes_git(raiz: Path) -> list[str]:
 
 def _foto_automatica_painel(raiz: Path, relativo: str) -> Path | None:
     partes = Path(relativo.replace("\\", "/")).parts
-    if not partes or partes[0].casefold() != PASTA_FOTOS_PAINEL.casefold():
+    if not partes or partes[0].casefold() not in {PASTA_FOTOS_PAINEL.casefold(), "imagens processos"}:
         return None
     caminho = raiz.joinpath(*partes)
     if caminho.suffix.casefold() not in EXTENSOES_FOTOS_PAINEL:
@@ -1004,7 +1004,7 @@ def sincronizar_fotos_painel(config: Configuracao) -> bool:
     if any(foto is None for foto in fotos):
         raise RuntimeError(
             "sincronização GitHub ativada, mas o repositório do painel "
-            "possui alterações pendentes fora da pasta FOTOS DISPLAY"
+            "possui alterações pendentes fora das pastas FOTOS DISPLAY e IMAGENS PROCESSOS"
         )
 
     arquivos = [foto for foto in fotos if foto is not None]
