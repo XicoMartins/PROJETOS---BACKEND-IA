@@ -396,7 +396,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         config, raiz_painel, remoto = self._configurar_painel_git()
         pasta_fotos = raiz_painel / "FOTOS DISPLAY"
         pasta_fotos.mkdir()
-        imagem = pasta_fotos / "DISPLAY TESTE.png"
+        imagem = pasta_fotos / "DISPLAY FIAÇÃO.png"
         imagem.write_bytes(b"imagem de teste")
 
         resultados = executar(config, aplicar=True)
@@ -410,7 +410,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
             self._executar_git(
                 remoto,
                 "show",
-                "main:FOTOS DISPLAY/DISPLAY TESTE.png",
+                "main:FOTOS DISPLAY/DISPLAY FIAÇÃO.png",
             ).stdout,
             "imagem de teste",
         )
@@ -419,7 +419,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
         config, raiz_painel, remoto = self._configurar_painel_git()
         pasta_fotos = raiz_painel / "IMAGENS PROCESSOS"
         pasta_fotos.mkdir()
-        imagem = pasta_fotos / "DISPLAY TESTE.png"
+        imagem = pasta_fotos / "DISPLAY FIAÇÃO.png"
         imagem.write_bytes(b"imagem de teste")
 
         resultados = executar(config, aplicar=True)
@@ -433,7 +433,7 @@ class AutomacaoPlanilhasQrTests(unittest.TestCase):
             self._executar_git(
                 remoto,
                 "show",
-                "main:IMAGENS PROCESSOS/DISPLAY TESTE.png",
+                "main:IMAGENS PROCESSOS/DISPLAY FIAÇÃO.png",
             ).stdout,
             "imagem de teste",
         )

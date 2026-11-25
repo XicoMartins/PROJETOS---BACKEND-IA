@@ -941,6 +941,7 @@ def _git_raiz(raiz: Path, *argumentos: str) -> subprocess.CompletedProcess:
         ],
         cwd=raiz,
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=True,
         **opcoes_windows,
