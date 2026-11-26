@@ -21978,7 +21978,7 @@
     "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002175_LATERAL_ESQUERDA.png"
   },
   {
-    "linha": 6,
+    "linha": 9,
     "processo_id": "002176",
     "acabado": "RACK CROSS",
     "ferramental": "Solda Ponto",
@@ -21987,5 +21987,38 @@
     "conteudo_qr": "002176",
     "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
     "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002176_BANDEJA_ORELHA.png"
+  },
+  {
+    "linha": 6,
+    "processo_id": "002177",
+    "acabado": "RACK CROSS",
+    "ferramental": "Solda Mig",
+    "processo": "Bandeja Arame",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002177",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002177_BANDEJA_ARAME.png"
+  },
+  {
+    "linha": 7,
+    "processo_id": "002178",
+    "acabado": "RACK CROSS",
+    "ferramental": "Solda Mig",
+    "processo": "Laterais no Corpo",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002178",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002178_LATERAIS_NO_CORPO.png"
+  },
+  {
+    "linha": 8,
+    "processo_id": "002179",
+    "acabado": "RACK CROSS",
+    "ferramental": "Solda Mig",
+    "processo": "Arame Traseiro",
+    "planilha": "LISTA DE PROCESSO RACK CROSS.xlsx",
+    "conteudo_qr": "002179",
+    "pasta_qr": "LISTA DE PROCESSO RACK CROSS",
+    "arquivo_qr": "LISTA DE PROCESSO RACK CROSS/002179_ARAME_TRASEIRO.png"
   }
 ]
